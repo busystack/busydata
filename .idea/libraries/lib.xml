@@ -1,0 +1,48 @@
+<component name="libraryTable">
+  <library name="lib">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/sshd-core-2.18.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/j2objc-annotations-3.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/jspecify-1.0.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/postgresql-42.7.13.jar!/" />
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/protobuf-java-4.36.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/grpc-api-1.84.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/grpc-context-1.84.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/sqlite-jdbc-3.53.4.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/grpc-core-1.84.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/sshd-common-2.18.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/bcprov-jdk18on-1.86.jar!/" />
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/busydata-backend-0.1.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/grpc-util-1.84.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/slf4j-nop-2.0.17.jar!/" />
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/grpc-netty-shaded-1.84.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/jsr305-3.0.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/guava-33.6.0-android.jar!/" />
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/jsqlparser-5.4.jar!/" />
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/grpc-stub-1.84.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/javax.annotation-api-1.3.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/error_prone_annotations-2.50.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/perfmark-api-0.27.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/mysql-connector-j-26.7.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/checker-qual-3.55.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/slf4j-api-2.0.17.jar!/" />
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/mariadb-java-client-3.5.10.jar!/" />
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/grpc-protobuf-1.84.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/jcl-over-slf4j-2.0.17.jar!/" />
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/commons-io-2.20.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/bcutil-jdk18on-1.86.jar!/" />
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar!/" />
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/commons-csv-1.14.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/annotations-4.1.1.4.jar!/" />
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/commons-codec-1.19.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/failureaccess-1.0.3.jar!/" />
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/gson-2.13.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/grpc-protobuf-lite-1.84.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/animal-sniffer-annotations-1.27.jar!/" />
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/proto-google-common-protos-2.64.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/lib/bcpkix-jdk18on-1.86.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

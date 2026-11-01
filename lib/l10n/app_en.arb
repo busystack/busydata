@@ -1,0 +1,1491 @@
+{
+  "@@locale": "en",
+  "cancel": "Cancel",
+  "windowMinimize": "Minimize",
+  "windowMaximize": "Maximize",
+  "windowRestore": "Restore",
+  "databaseExplorer": "Database Explorer",
+  "databases": "Databases",
+  "newConnection": "New connection",
+  "filterTree": "Filter connections and objects",
+  "treeFilterScope": "Filters loaded tree objects",
+  "searchObjects": "Search database objects",
+  "fileMenu": "File",
+  "editMenu": "Edit",
+  "viewMenu": "View",
+  "connectionMenu": "Connection",
+  "objectMenu": "Object",
+  "runMenu": "Run options",
+  "commands": "Commands",
+  "findCommand": "Find command",
+  "newSql": "New query",
+  "openSql": "Open SQL",
+  "openSqlFile": "Open SQL file",
+  "saveSql": "Save SQL",
+  "closeTab": "Close tab",
+  "openWorkspace": "Open workspace",
+  "saveWorkspace": "Save workspace",
+  "settings": "Settings",
+  "findText": "Find",
+  "replaceText": "Replace",
+  "formatSql": "Format SQL",
+  "lineComments": "Toggle line comments",
+  "snippets": "SQL snippets",
+  "run": "Run",
+  "runStatement": "Run current statement",
+  "runSelection": "Run selection",
+  "runScript": "Run script",
+  "explain": "Explain",
+  "explainAnalyze": "Explain analyze",
+  "connect": "Connect",
+  "disconnect": "Disconnect",
+  "sessionDetails": "Session details",
+  "beginTransaction": "Begin transaction",
+  "commitTransaction": "Commit transaction",
+  "rollbackTransaction": "Roll back transaction",
+  "enableAutoCommit": "Enable auto-commit",
+  "disableAutoCommit": "Disable auto-commit",
+  "outcomeUnknown": "Outcome unknown",
+  "outcomeUnknownNote": "The operation may have completed. This session cannot run further SQL. Never retry automatically; reconcile the outcome before starting new work.",
+  "notConnected": "Disconnected",
+  "autoCommit": "Auto-commit",
+  "manualTransaction": "Manual transaction",
+  "readOnlyPolicy": "BusyData read-only policy",
+  "data": "Data",
+  "structure": "Structure",
+  "results": "Results",
+  "messages": "Messages",
+  "plan": "Plan",
+  "changes": "Changes",
+  "history": "History",
+  "jobs": "Jobs",
+  "retainedResults": "Retained results",
+  "recoverEdits": "Recover staged changes",
+  "applyAndCommit": "Apply and commit",
+  "inspectStructure": "Inspect structure",
+  "openData": "Open data",
+  "openDefinition": "Open definition",
+  "copyQualifiedName": "Copy qualified name",
+  "refresh": "Refresh",
+  "columns": "Columns",
+  "indexes": "Indexes",
+  "constraints": "Keys and constraints",
+  "foreignKeys": "Foreign keys",
+  "triggers": "Triggers",
+  "definition": "Definition",
+  "dependencies": "Dependencies",
+  "connectionCapabilities": "Connection overview",
+  "sessionsAndLocks": "Sessions and locks",
+  "usersAndRoles": "Users and roles",
+  "saveSnapshot": "Save schema snapshot",
+  "compareSchemas": "Compare schemas",
+  "objectDesigner": "Object designer",
+  "diagram": "ER diagram",
+  "backup": "Backup",
+  "restore": "Restore",
+  "importData": "Import data",
+  "exportRetained": "Export retained data",
+  "exportSql": "Run SQL export",
+  "stageInsert": "Insert row",
+  "stageUpdate": "Edit row",
+  "stageDelete": "Delete row",
+  "discardChanges": "Discard pending changes",
+  "disposeResult": "Dispose retained data",
+  "currentSchema": "Current schema (to be changed)",
+  "desiredSchema": "Desired schema",
+  "applyTo": "Apply to",
+  "loading": "Loading",
+  "empty": "No objects in this scope",
+  "more": "More",
+  "filter": "Filter",
+  "sort": "Sort",
+  "selectTarget": "Choose connection",
+  "requireSql": "Requires a SQL document",
+  "requireSession": "Requires a connected, known session",
+  "requireResult": "Requires retained data",
+  "requireObject": "Requires an object target",
+  "cancelRequested": "Cancellation requested",
+  "cancelled": "Cancelled",
+  "queued": "Queued",
+  "running": "Running",
+  "completed": "Completed",
+  "failed": "Failed",
+  "partial": "Partial",
+  "sessionSharing": "Share an existing session (advanced)",
+  "production": "Production",
+  "staging": "Staging",
+  "development": "Development",
+  "executionOptions": "Execution options",
+  "resultRowLimit": "Result row limit (1–1000000)",
+  "boundedRead": "Bounded read",
+  "streamingRead": "Streaming read · owns a read transaction",
+  "stopOnError": "Stop script on error",
+  "continueOnError": "Continue on error · prior statements may have committed",
+  "loadMore": "Load more",
+  "favorite": "Toggle favorite",
+  "connectionGroup": "Connection group",
+  "copyRange": "Copy range",
+  "inspectValue": "Inspect value",
+  "editConnection": "Edit connection",
+  "chooseSnapshot": "Choose snapshot",
+  "captureSchema": "Capture schema",
+  "sameSchemaRestriction": "Snapshots must have the same engine, schema name and snapshot version. Comparing and saving never applies changes.",
+  "restoredTaskState": "This document reference was restored. Previous backend evidence, sessions and jobs are unavailable. Choose an explicit action to inspect or start new work; restoration never connects, executes SQL or replays changes.",
+  "preChangeSnapshot": "Pre-change snapshot · changes committed. Refresh explicitly to inspect current rows and server defaults.",
+  "sqlProvenance": "SQL provenance",
+  "assessEditing": "Assess editing",
+  "viewDetails": "View details",
+  "gridMenu": "Data grid",
+  "visibleColumns": "Visible columns",
+  "hidden": "Hidden",
+  "ascending": "Ascending",
+  "descending": "Descending",
+  "equals": "Equals",
+  "notEqual": "Does not equal",
+  "lessThan": "Less than",
+  "greaterThan": "Greater than",
+  "isNull": "Is NULL",
+  "isNotNull": "Is not NULL",
+  "exactValue": "Exact value",
+  "sortTable": "Sort table data",
+  "filterTable": "Filter table data",
+  "sortRetained": "Sort retained snapshot",
+  "filterRetained": "Filter retained snapshot",
+  "applyView": "Apply",
+  "rowsLabel": "Rows",
+  "fetchedRows": "Fetched rows",
+  "fixedSnapshot": "Fixed fetched-row snapshot",
+  "limitReached": "Limit reached",
+  "retainedData": "Retained data",
+  "applyRequiresAutoCommit": "Apply and commit requires an idle session with auto-commit enabled.",
+  "connectionProfile": "Connection profile",
+  "basic": "Basic",
+  "advanced": "Advanced",
+  "connectionName": "Name",
+  "hostname": "Hostname (also used for TLS verification)",
+  "port": "Port",
+  "database": "Database",
+  "user": "User",
+  "password": "Password",
+  "writableProfile": "Writable profile",
+  "readonlyProfile": "Read-only profile",
+  "tlsVerify": "TLS: verify certificate and hostname",
+  "tlsInsecure": "TLS: INSECURE, do not verify",
+  "tlsDisabled": "TLS: DISABLED",
+  "testConnection": "Test without saving",
+  "saveProfile": "Save",
+  "saveConnect": "Save & connect",
+  "sessionPassword": "Session-only password",
+  "storedPassword": "Store password in OS secure storage",
+  "chooseFile": "Choose file",
+  "testRunning": "Testing connection…",
+  "cancelTest": "Cancel test",
+  "idle": "Idle",
+  "activeTransaction": "Transaction open",
+  "failedTransaction": "Transaction failed",
+  "inspectionContext": "Inspection session",
+  "requireTableOrView": "Select a table or view",
+  "operationPending": "A document operation is awaiting acknowledgement",
+  "requirePlan": "Select a retained Explain execution",
+  "openPlanDocument": "Open plan document",
+  "locks": "Locks",
+  "statistics": "Statistics",
+  "queryStatistics": "Query statistics",
+  "indexDiagnostics": "Index diagnostics",
+  "grants": "Grants",
+  "sqlExecution": "SQL execution",
+  "planReady": "Retained plan ready; SQL was not rerun",
+  "executionPlan": "Execution plan",
+  "openOwner": "Open owner",
+  "terminateActivity": "Terminate activity",
+  "close": "Close",
+  "previous": "Previous",
+  "next": "Next",
+  "replaceSelection": "Replace selection",
+  "replaceAll": "Replace all",
+  "restartBackend": "Restart backend",
+  "structuredTree": "Structured tree",
+  "rawOutput": "Raw output",
+  "previousTextPage": "Previous text page",
+  "nextTextPage": "Next text page",
+  "filterChangedObjects": "Filter changed objects",
+  "rebindVerifiedEdits": "Rebind verified edits",
+  "discardRecoveryRecord": "Discard recovery record",
+  "revertChange": "Revert pending change",
+  "chooseSource": "Choose source",
+  "chooseDestination": "Choose destination",
+  "delimiterField": "Delimiter (one character)",
+  "batchRowsField": "Rows per batch (1–1000)",
+  "rejectedLimit": "Rejected-row limit (1–1000)",
+  "previewSource": "Preview source",
+  "reviewTransfer": "Review transfer",
+  "startImport": "Start import",
+  "startRestore": "Start restore",
+  "startExport": "Start export",
+  "requestCancel": "Request cancellation",
+  "sourceMapping": "Source and target mapping",
+  "nativeTool": "Native tool",
+  "defaultOmit": "Omit / database default",
+  "overwriteNever": "Do not overwrite",
+  "overwriteExisting": "Overwrite existing file",
+  "planDetails": "Plan details",
+  "planMetricsNote": "Estimates and actual measurements use the server’s field names. Missing measurements are unavailable.",
+  "connected": "Connected",
+  "disconnected": "Disconnected",
+  "tables": "Tables",
+  "views": "Views",
+  "routines": "Routines",
+  "expand": "Expand",
+  "collapse": "Collapse",
+  "databaseWorkbench": "Database workbench",
+  "sidebar": "Sidebar",
+  "unchanged": "Unchanged",
+  "reviewDetails": "Review details",
+  "generatedSql": "Generated SQL",
+  "changeReverted": "Pending change reverted. Request a fresh review.",
+  "unknownBatch": "Outcome unknown. The batch may have committed. Never replay it automatically; reconcile the session and recovery record.",
+  "expiredChangeReview": "The target changed or the review expired. Request a fresh review.",
+  "applyCommitExplanation": "Apply and commit starts and commits its own transaction. The source console must be idle with auto-commit enabled. Resolve manual SQL transactions separately.",
+  "newRow": "New row",
+  "original": "Original",
+  "proposed": "Proposed",
+  "changeCounts": "{inserts} inserts · {updates} updates · {deletes} deletes",
+  "sourceRow": "Source row {row}",
+  "@changeCounts": {
+    "placeholders": {
+      "inserts": {
+        "type": "int"
+      },
+      "updates": {
+        "type": "int"
+      },
+      "deletes": {
+        "type": "int"
+      }
+    }
+  },
+  "@sourceRow": {
+    "placeholders": {
+      "row": {
+        "type": "String"
+      }
+    }
+  },
+  "refreshing": "Refreshing…",
+  "refreshActivities": "Refresh activities",
+  "explicitRefresh": "Explicit refresh",
+  "pollFiveSeconds": "Poll every 5 seconds",
+  "cancelSelectedActivity": "Cancel selected activity",
+  "terminateSelectedSession": "Terminate selected session",
+  "filterActivities": "Filter current activities",
+  "blockedBy": "Blocked by:",
+  "delete": "Delete",
+  "remove": "Remove",
+  "up": "Up",
+  "search": "Search",
+  "yes": "Yes",
+  "no": "No",
+  "clear": "Clear",
+  "copy": "Copy",
+  "insert": "Insert",
+  "update": "Update",
+  "open": "Open",
+  "migrationEngineMismatch": "The Apply to connection must use the same engine as the compared snapshots. Cross-engine migration is unsupported.",
+  "metadataContextChanged": "Inspection context changed. Refresh metadata explicitly.",
+  "newTableName": "New table name",
+  "routineIdentity": "Exact routine identity",
+  "objectColumnName": "Object / column name",
+  "builtInType": "Built-in type",
+  "sqlExpression": "SQL expression (empty removes it)",
+  "newPropertyValue": "New property value",
+  "columnComment": "Column comment",
+  "columnCollation": "Column collation (empty uses server default)",
+  "addDesignedColumn": "Add column to new table",
+  "checkExpression": "CHECK expression",
+  "referencedSchema": "Referenced schema / database",
+  "generating": "Generating…",
+  "generateReviewedDdl": "Generate reviewed DDL",
+  "inspectCapturedDefinition": "Inspect captured definition",
+  "capturedObject": "Captured object",
+  "designReviewNote": "Changes are generated for review. Database contents remain unchanged until reviewed execution.",
+  "columnMetadataUnavailable": "Column metadata unavailable for this scope; inspect the selected schema before designing a column list.",
+  "ordinaryColumn": "Ordinary column",
+  "columnWithDefault": "Column with default",
+  "identityColumn": "Identity / auto-increment",
+  "generatedColumn": "Generated column",
+  "columnType": "Column type",
+  "nullableNotNull": "Nullable / NOT NULL",
+  "defaultExpression": "Default expression",
+  "generatedExpression": "Generated expression",
+  "columnCollationProperty": "Column collation",
+  "loggedUnlogged": "Logged / unlogged",
+  "tableComment": "Table comment",
+  "storageEngine": "Storage engine",
+  "tableCollation": "Table collation",
+  "rowFormat": "Row format",
+  "createOrReplace": "Create or replace",
+  "dropSelectedObject": "Drop selected object",
+  "addColumn": "Add column",
+  "editColumnProperties": "Edit column properties",
+  "tableProperties": "Table properties",
+  "triggerDefinition": "Trigger definition",
+  "createTable": "Create table",
+  "viewDefinition": "View definition",
+  "routineDefinition": "Routine definition",
+  "chooseExistingObject": "Choose existing object",
+  "nullable": "Nullable",
+  "removeIdentity": "Remove identity",
+  "generatedAlways": "Generated always",
+  "generatedByDefault": "Generated by default / auto-increment",
+  "loggedTable": "Logged table",
+  "unloggedTable": "Unlogged table",
+  "orderedPrimaryKeyColumns": "Ordered primary-key columns",
+  "orderedColumns": "Ordered columns",
+  "ordinaryIndex": "Ordinary index",
+  "uniqueIndex": "Unique index",
+  "primaryKey": "Primary key",
+  "uniqueConstraint": "Unique constraint",
+  "foreignKey": "Foreign key",
+  "checkConstraint": "CHECK constraint",
+  "immediateChecking": "Immediate checking",
+  "deferrableChecking": "Deferrable checking",
+  "initiallyImmediate": "Initially immediate",
+  "initiallyDeferred": "Initially deferred",
+  "referencedTable": "Referenced table",
+  "orderedReferencedColumns": "Referenced columns in matching order",
+  "objectDefinitionEditor": "Native object definition SQL editor",
+  "onDelete": "On delete",
+  "onUpdate": "On update",
+  "stay": "Stay",
+  "saveSqlClose": "Save SQL and close",
+  "discardSqlClose": "Discard SQL and close",
+  "closeBusyData": "Close BusyData",
+  "saveDraftsClose": "Save drafts and close",
+  "closeWithoutRecovery": "Close without recovery",
+  "recoveryFailed": "Recovery failed",
+  "discardFailedSaveClose": "Discard failed save and close",
+  "closeWithoutSavingRecovery": "Close without saving recovery",
+  "disableSqlRecovery": "Disable SQL recovery",
+  "historyPrivacy": "History privacy",
+  "enableSqlRetention": "Enable SQL retention",
+  "disableSqlRetention": "Disable SQL retention",
+  "clearHistory": "Clear history",
+  "deleteHistoryEntry": "Delete history entry",
+  "deleteSelected": "Delete selected",
+  "saveRetention": "Save retention",
+  "retentionDays": "Retention days",
+  "sqlTextRetained": "SQL text retained",
+  "sqlTextDisabled": "SQL text disabled",
+  "openHistoryQuery": "Open as new SQL tab",
+  "caCertificateFile": "CA certificate file",
+  "clientCertificateFile": "Client certificate file",
+  "clientKeyFile": "Client key file",
+  "directConnection": "Direct connection",
+  "sshTunnel": "SSH tunnel",
+  "sshHost": "SSH host",
+  "sshPort": "SSH port",
+  "sshUser": "SSH user",
+  "reviewedKnownHosts": "Reviewed known_hosts file",
+  "reviewSshKey": "Review SSH host key",
+  "changedSshKey": "Changed SSH host key",
+  "verifyFingerprint": "Verify this fingerprint independently before trusting it.",
+  "selectedKeyPassword": "Selected key or password",
+  "selectedAgentIdentity": "Selected SSH-agent identity",
+  "selectedAgentSocket": "Selected Linux agent socket / Windows named pipe",
+  "selectedKeyFingerprint": "Selected key fingerprint · SHA256:…",
+  "selectedPrivateKey": "Selected private key (optional)",
+  "sshPassword": "SSH password",
+  "keyPassphrase": "Key passphrase",
+  "connectionTimeout": "Connection timeout · 1–120 seconds",
+  "sqlTimeout": "SQL execution/fetch deadline · 1–3600 seconds (0 = 60)",
+  "schemasEquivalent": "Captured schemas are equivalent.",
+  "migrationComplete": "Migration covers supported captured differences.",
+  "migrationPartial": "Partial migration; unsupported differences remain.",
+  "differencesLimited": "Difference presentation is limited. Review the complete saved snapshots and generated SQL.",
+  "absent": "Absent",
+  "definitionPreviewLimited": "Definition preview is limited; use the original snapshot for full evidence.",
+  "migrationBatchNote": "SQL is one dependency-ordered batch. Individual object selection is for inspection and does not select statements for application.",
+  "unsupportedLabel": "Unsupported",
+  "differenceAdded": "Added",
+  "differenceRemoved": "Removed",
+  "differenceChanged": "Changed",
+  "selectHistoryEntry": "Select a history entry",
+  "searchSqlTarget": "Search SQL or target",
+  "closeSqlTab": "Close SQL tab",
+  "historyMetadataRetained": "Status and target metadata remain in history.",
+  "historyPreviewNote": "Preview only. Open as new SQL tab to retrieve retained text.",
+  "selected": "Selected",
+  "authReviewNote": "Review the exact principal and target before applying. Credentials are never put in SQL documents or history. Existing connections and saved passwords remain separate.",
+  "createLogin": "Create login account",
+  "createRole": "Create non-login role",
+  "setPassword": "Set password",
+  "preventLogin": "Prevent new logins",
+  "allowLogin": "Allow new logins",
+  "dropPrincipal": "Drop principal",
+  "principalName": "Exact principal name",
+  "accountHost": "Exact account host (wildcards grant broad login scope)",
+  "newPassword": "New password",
+  "repeatPassword": "Repeat new password",
+  "reviewAccount": "Review account operation",
+  "passwordsMismatch": "Enter the same nonempty password twice",
+  "accountSubmitFailed": "Account operation could not be submitted. Check the target, authentication policy and database privileges.",
+  "privilegeReviewNote": "Inspect direct grants; generated SQL still requires execution review.",
+  "inspectionLimited": "Limited to 500 rows per section. Narrow the search; an empty section does not prove absence of effective access.",
+  "findPrincipal": "Find user / role name",
+  "searchPrincipals": "Search principals",
+  "choosePrincipal": "Choose a principal",
+  "inspectGrants": "Inspect selected grants",
+  "tablePrivileges": "Table / view privileges",
+  "schemaPrivileges": "Schema privileges",
+  "databasePrivileges": "Database privileges",
+  "roleMembership": "Role membership",
+  "defaultRole": "Default role activation",
+  "chooseGrantRole": "Choose the role to grant / revoke",
+  "tableView": "Table / view",
+  "explicitPrivileges": "Explicit privileges (comma separated)",
+  "setDefaultRole": "Set selected default role",
+  "clearDefaultRole": "Clear default role",
+  "grantAccess": "Grant access",
+  "revokeAccess": "Revoke access",
+  "withoutDelegation": "Without delegation",
+  "allowDelegation": "Allow recipient to grant to others",
+  "readonlyChanges": "This profile is read-only. Changes require an explicitly writable session.",
+  "createPrincipal": "Create user / role",
+  "manageAuthentication": "Manage selected authentication",
+  "openPrivilegeSql": "Open privilege SQL for review",
+  "inspectPrincipalFirst": "Inspect the selected principal before drafting a change",
+  "accountAuthentication": "Account authentication",
+  "schema": "Schema",
+  "available": "Available",
+  "availableEmpty": "Available · empty data",
+  "limitedVisibility": "Limited visibility or scope",
+  "permissionDenied": "Permission denied",
+  "unavailable": "Unavailable",
+  "profileDisabled": "Disabled by profile",
+  "unknownState": "Unknown",
+  "inspecting": "Inspecting…",
+  "refreshCapabilities": "Refresh capabilities",
+  "staleRefresh": "Stale · refresh after connecting",
+  "staleContext": "Stale · refresh after connecting or changing context",
+  "partialTreeLimit": "Partial · tree limit reached; narrow with database object search",
+  "schemaComparison": "Schema comparison",
+  "searchTable": "Search table",
+  "focusObject": "Focus",
+  "exportSvg": "Export SVG",
+  "exportPng": "Export PNG",
+  "diagramNotes": "Diagram notes (included in SVG)",
+  "openNotes": "Open notes",
+  "saveNotes": "Save notes",
+  "newSnippet": "New snippet",
+  "snippetName": "Snippet name",
+  "saveSnippet": "Save snippet",
+  "deleteSnippet": "Delete saved snippet",
+  "insertSnippet": "Insert into SQL document",
+  "snippetEditor": "SQL snippet editor",
+  "snippetsNote": "Insert saved local SQL into the captured document with undo. Execution remains explicit.",
+  "level": "Level",
+  "expanded": "expanded",
+  "collapsed": "collapsed",
+  "treeLevel": "level",
+  "retainedView": "Retained view",
+  "tableQuerySnapshot": "Table query snapshot",
+  "originalResultNote": "Original retained result; SQL is not executed by paging or inspection",
+  "tableFilterNote": "Apply submits a new reviewed database query. The previous snapshot remains available.",
+  "retainedFilterNote": "All fetched rows in a fixed snapshot. SQL is not rerun. Retained ordering can differ from database collation.",
+  "retainedRowNote": "Choose a row within the already fetched result. SQL is not rerun.",
+  "copyLimitNote": "Copy is limited to 10,000 cells; export retained data for larger ranges.",
+  "inlineValueLimit": "Inline edits support 8KiB values",
+  "editContextChanged": "The source session or editability context changed; inspect or refresh the assessment before staging",
+  "editAssessmentUnavailable": "Editability unavailable; refresh assessment after the session is idle",
+  "rowChangeReverted": "Pending row change reverted; database unchanged",
+  "sqlCopyRequiresMetadata": "SQL copy requires the backend and its retained type metadata.",
+  "exportFullValue": "Export full retained value",
+  "valueExportReview": "Save {bytes} bytes to {path}? Existing contents will be replaced. SQL is not rerun.",
+  "goToRetainedRow": "Go to retained row",
+  "row": "Row",
+  "go": "Go",
+  "retryRows": "Retry retained rows",
+  "previousRows": "Previous rows",
+  "nextRows": "Next rows",
+  "firstWindow": "First retained window",
+  "lastWindow": "Last fetched window",
+  "setNull": "Set NULL",
+  "copyFormat": "Copy {format}",
+  "textValue": "Text",
+  "sqlValues": "SQL values",
+  "rowSelection": "Row selection",
+  "selectRow": "Select row {row}",
+  "columnHeader": "Column {column}",
+  "pendingChange": "pending change",
+  "readonlyCell": "Read-only cell",
+  "editableCell": "Editable cell",
+  "loadValueFirst": "Load this retained value first",
+  "editUnavailable": "Editability is not available",
+  "editCell": "Edit cell",
+  "unsupportedEditValue": "This retained value supports inspection only",
+  "bytesCount": "{bytes} bytes",
+  "@valueExportReview": {
+    "placeholders": {
+      "bytes": {
+        "type": "String"
+      },
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "@copyFormat": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
+  "@selectRow": {
+    "placeholders": {
+      "row": {
+        "type": "String"
+      }
+    }
+  },
+  "@columnHeader": {
+    "placeholders": {
+      "column": {
+        "type": "String"
+      }
+    }
+  },
+  "@bytesCount": {
+    "placeholders": {
+      "bytes": {
+        "type": "String"
+      }
+    }
+  },
+  "problems": "Problems",
+  "ownedSessions": "Owned sessions",
+  "noProblems": "No recorded problems",
+  "duplicateConnection": "Duplicate connection",
+  "deleteConnection": "Delete connection",
+  "deleteConnectionReview": "Delete {name}? Existing physical sessions keep their original settings.",
+  "unresolvedSessions": "Unresolved sessions",
+  "@deleteConnectionReview": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "disconnectSessionNote": "Resolve active jobs and transactions first. Disconnect affects every client of this physical session; it never commits or replays SQL. Unknown outcomes remain unknown.",
+  "transferSettingsChanged": "Transfer settings changed; review again",
+  "transferReviewReady": "Review ready · verify target, scope, mapping and file behavior before starting",
+  "sourcePreviewNotice": "Source preview · no database rows imported",
+  "transferRequiresReview": "Review this exact transfer first",
+  "transferSubmittedNotice": "Submitted · cancellation does not undo acknowledged commits or published files",
+  "sqlExportExecutionNote": "A new reviewed SQL execution",
+  "retainedExportSnapshotNote": "Fetched snapshot; SQL is not executed",
+  "restorePartialCommitNote": "Restore may partially commit. Cancelling does not undo the restore.",
+  "sourcePreviewLimit": "Source preview · up to 20 rows",
+  "importBatchSafetyNote": "Errors or cancellation preserve earlier batch commits. Source hashes and selected immutable material are verified before dispatch.",
+  "nullMarkerLiteralNote": "Unquoted NULL marker; quoted marker is literal text",
+  "immutableSourceHash": "Immutable source SHA-256: {hash}",
+  "@immutableSourceHash": {
+    "placeholders": {
+      "hash": {
+        "type": "String"
+      }
+    }
+  },
+  "sourceColumnLabel": "Source column {column}",
+  "@sourceColumnLabel": {
+    "placeholders": {
+      "column": {
+        "type": "String"
+      }
+    }
+  },
+  "previewRowLabel": "Preview row {row}, {column}: {value}",
+  "@previewRowLabel": {
+    "placeholders": {
+      "row": {
+        "type": "String"
+      },
+      "column": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "transferCancellationNotice": "Cancellation requested · wait for acknowledgement",
+  "transferProgress": "{processed} processed · {committed} committed · {rejected} rejected",
+  "@transferProgress": {
+    "placeholders": {
+      "processed": {
+        "type": "String"
+      },
+      "committed": {
+        "type": "String"
+      },
+      "rejected": {
+        "type": "String"
+      }
+    }
+  },
+  "importAtomicPolicy": "All rows in one transaction",
+  "importBatchPolicy": "Commit batches; stop on error",
+  "importSkipPolicy": "Skip invalid rows; commit batches",
+  "closeWorkCounts": "Acknowledgements/connections: {operations}\nUnsaved documents: {documents}\nSaves in progress: {saves}\nStaged edits: {edits}\nActive jobs: {jobs}\nTransactions requiring cleanup: {transactions}\nUnknown operation outcomes: {unknown}\nUncertain sessions: {sessions}",
+  "@closeWorkCounts": {
+    "placeholders": {
+      "operations": {
+        "type": "String"
+      },
+      "documents": {
+        "type": "String"
+      },
+      "saves": {
+        "type": "String"
+      },
+      "edits": {
+        "type": "String"
+      },
+      "jobs": {
+        "type": "String"
+      },
+      "transactions": {
+        "type": "String"
+      },
+      "unknown": {
+        "type": "String"
+      },
+      "sessions": {
+        "type": "String"
+      }
+    }
+  },
+  "closeDraftSaved": "SQL drafts will be saved locally.",
+  "closeDraftLost": "Recovery is disabled; unsaved SQL and object designs will be lost.",
+  "closeDesignRecovery": "Object designs use private bounded recovery. Reconnect and inspect metadata explicitly after reopening.",
+  "closeCleanupReview": "Closing a final session owner requests cancellation, rolls back acknowledged transactions and disconnects. Unknown outcomes remain unknown; SQL is never committed or replayed.",
+  "closeSharedSession": "Other clients retain their shared physical session.",
+  "closeStagedRecovery": "Pending changes require acknowledged private recovery, explicit reconnection and a fresh review.",
+  "closeRecoveryLoss": "Latest documents and layout could not be saved. Closing may lose unsaved SQL and pending changes; existing files and recovery data are preserved.",
+  "closeWaitNotice": "Wait for pending acknowledgements and connection cleanup before closing.",
+  "saveFailedNotice": "SQL save failed. Preserve the dirty SQL or explicitly discard it.",
+  "closeCleanupFailed": "Backend cleanup failed; BusyData remains open.",
+  "closeBackendUnverified": "Backend status is unverified; work may still be pending.",
+  "historyRetainSqlReview": "SQL can contain secrets. Store SQL text for {days} days?",
+  "@historyRetainSqlReview": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
+  "historyStopSqlReview": "Stop storing SQL text and remove it from existing history?",
+  "historyClearReview": "Delete all history? Active operations can record their outcome when they finish.",
+  "historyDeleteReview": "Delete the selected history entry?",
+  "historyRetentionRange": "Retention must be 1–3650 days",
+  "enableSqlHistory": "Enable SQL history",
+  "stopSqlHistory": "Stop SQL retention",
+  "recoveryDiscardReview": "Discard this recovery record? Reconcile unknown outcomes first; discarding never undoes committed changes.",
+  "closeSqlSummary": "Unsaved SQL: {unsaved}\nPending changes: {edits}\nActive jobs: {jobs}",
+  "@closeSqlSummary": {
+    "placeholders": {
+      "unsaved": {
+        "type": "String"
+      },
+      "edits": {
+        "type": "String"
+      },
+      "jobs": {
+        "type": "String"
+      }
+    }
+  },
+  "recoveryStayOpen": "Recovery failed. BusyData remains open; unsaved work is preserved.",
+  "commitUncertaintyNote": "A network failure can leave the commit outcome unknown. Never retry automatically.",
+  "closeObjectDesignDiscard": "Unsaved object design fields will be discarded. Generate and save SQL first to retain the design.",
+  "savePrivateDrafts": "Save private recovery drafts",
+  "noPrivateDrafts": "Do not save recovery drafts",
+  "shortcutField": "{command} shortcut",
+  "@shortcutField": {
+    "placeholders": {
+      "command": {
+        "type": "String"
+      }
+    }
+  },
+  "shortcutInvalid": "Use a valid shortcut that is not assigned to another action. F6 and Shift+F6 are reserved.",
+  "disableRecoveryReview": "Delete local SQL, design and staged-change recovery? Unsaved work stays open; a crash can lose it. Reconcile unknown outcomes first.",
+  "preferencesSaved": "Settings saved",
+  "sharingSessionReview": "This query shares the named physical session, transaction, temporary objects and settings with its listed clients. Closing one client preserves the others.",
+  "recoveryReconcileFirst": "Reconcile applying or unknown changes before disabling recovery. Discard recovery records only through their explicit review.",
+  "enterSearchText": "Enter search text",
+  "noSearchMatches": "No matches",
+  "searchMatchCount": "{position} of {total} matches",
+  "@searchMatchCount": {
+    "placeholders": {
+      "position": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "formatSqlChanged": "SQL or target changed. Original SQL preserved; request a fresh format preview.",
+  "formatSqlUnavailable": "Formatting unavailable for incomplete or unsupported syntax or analysis limits. Original SQL preserved.",
+  "stageChange": "Stage change",
+  "pendingChangesCount": "{count} pending changes; database unchanged until reviewed application.",
+  "@pendingChangesCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "discardChangesCount": "Discard {count} pending changes? No database operation is submitted.",
+  "@discardChangesCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "recoveryNoExecution": "Recovery never connects, runs source SQL, resumes transactions or replays changes. Unknown and committed records cannot be reapplied.",
+  "recoveredDesign": "Recovered design. Connect explicitly and inspect current metadata before generating a fresh review. Restoration fetched no SQL or metadata.",
+  "retainedUnavailable": "Retained data unavailable. Saved SQL and private recovery remain local.",
+  "activityFingerprintNote": "The selected activity fingerprint is revalidated before dispatch. Writes may have unknown outcomes.",
+  "replaceFileReview": "Replace the reviewed file at {path}? A changed destination requires a fresh review.",
+  "@replaceFileReview": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "diagramPngSaved": "Diagram PNG saved. Long notes show up to six lines.",
+  "editTargetChanged": "The edit target changed. Reopen the row editor before staging.",
+  "affectedRowCount": "Affected rows: {count}",
+  "@affectedRowCount": {
+    "description": "Database-reported affected row count in execution messages.",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "zoomIn": "Zoom in",
+  "zoomOut": "Zoom out",
+  "resetView": "Reset view",
+  "diagramKeys": "Arrows pan; + and - zoom; Home resets the view.",
+  "explorerConnected": "Explorer connected",
+  "explorerDisconnected": "Explorer disconnected",
+  "querySessionCount": "Query sessions {count}",
+  "@querySessionCount": {
+    "description": "Physical query sessions separate from the Explorer inspection session.",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "metadataColumn": "Column",
+  "metadataPosition": "Position",
+  "metadataUnique": "Unique",
+  "metadataJdbcType": "JDBC type",
+  "metadataAutoIncrement": "Auto-increment",
+  "metadataReferencedColumn": "Referenced column",
+  "metadataComment": "Comment",
+  "metadataType": "Type",
+  "metadataEvent": "Event",
+  "metadataSpecificName": "Native specific identifier",
+  "metadataOptions": "Options",
+  "metadataInheritance": "Inheritance",
+  "metadataDefinitionCaptured": "Captured native definition",
+  "metadataDefinitionUnavailable": "Definition unavailable in captured metadata",
+  "metadataDefinitionUnsupported": "Captured object has no supported native definition",
+  "connections": "Connections",
+  "noConnections": "No connections yet",
+  "startTitle": "Connect to a database",
+  "startDescription": "Connect to PostgreSQL, MySQL, or MariaDB to browse objects, manage data, and run queries.",
+  "savedStartTitle": "Select a connection",
+  "savedStartDescription": "Connect to a saved connection in Database Explorer to browse objects and run queries.",
+  "noConnection": "No connection",
+  "queryTitle": "Query {number}",
+  "sessionMenu": "Session",
+  "noFilterMatches": "No matching connections or loaded objects",
+  "@queryTitle": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "activityState": "State",
+  "activityWait": "Wait",
+  "generalSettings": "General",
+  "optionsSettings": "Options",
+  "host": "Host",
+  "databaseSystem": "Database system",
+  "passwordStorage": "Password storage",
+  "environmentLabel": "Environment",
+  "readOnlySettings": "Read-only policy",
+  "tlsPolicy": "TLS policy",
+  "sshConnection": "SSH connection",
+  "sshAuthentication": "SSH authentication",
+  "connectionTestAction": "Test connection",
+  "details": "Details",
+  "copyDetails": "Copy details",
+  "retry": "Retry",
+  "filterCellValue": "Filter by this value",
+  "connectsWhenRun": "Connects when run",
+  "connectionSaving": "Saving…",
+  "connectionConnecting": "Connecting…",
+  "connectionCancelling": "Cancelling…",
+  "connectionSettingsChanged": "Settings changed. Test this revision to verify the connection.",
+  "connectionTestChanged": "Settings changed during testing. Test this revision again.",
+  "connectionRequired": "Required",
+  "connectionCorrectFields": "Correct the indicated fields.",
+  "connectionHostname": "Enter a hostname or IP address",
+  "connectionSshHostname": "Enter an SSH hostname or IP address",
+  "connectionMaxLength": "Use at most 256 characters",
+  "connectionTlsHelp": "The certificate and Host must verify. Select a CA in SSH/SSL when needed.",
+  "connectionTlsReview": "Review the selected TLS policy before connecting.",
+  "connectionStorageUnavailable": "Secure storage unavailable. Enter a password; choose session-only explicitly to save without secure storage.",
+  "connectionHostReviewed": "Reviewed host identity selected for this profile and endpoint.",
+  "connectionSshReviewing": "Reviewing SSH host…",
+  "connectionFailureAuthentication": "Database authentication was rejected. Check User and Password in General.",
+  "connectionFailureTls": "TLS verification failed. Check the hostname and certificates in SSH/SSL.",
+  "connectionFailureSshKey": "The SSH host key was refused. Review the exact host identity in SSH/SSL.",
+  "connectionFailureEndpoint": "The endpoint could not be reached. Check Host, Port and SSH/SSL.",
+  "connectionFailureCancelled": "Connection cancelled. Your values are preserved.",
+  "connectionFailureSettings": "Connection settings were rejected. Review the labeled fields.",
+  "connectionFailureAccess": "The server rejected access. Check credentials and permissions.",
+  "connectionFailureUnavailable": "Connection unavailable. Check the endpoint, TLS and SSH settings.",
+  "connectionFailureTimeout": "Connection timed out. Check the endpoint and connection timeout.",
+  "connectionFailureUnknown": "Connection was not completed. Review the endpoint, credentials and SSH/SSL settings.",
+  "connectionNumber": "Enter a whole number from {min} to {max}",
+  "@connectionNumber": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "connectionSavedFailure": "Connection saved: {name}. Connection attempt failed. ",
+  "@connectionSavedFailure": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "backendBusy": "The backend is busy. Wait for the current request, then try again.",
+  "rpcRequestUnconfirmed": "The request was not confirmed (RPC {code}).",
+  "operationUnconfirmed": "The operation could not be completed.",
+  "@rpcRequestUnconfirmed": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "connectionFailureTlsMaterial": "TLS material is unavailable or invalid. Check trust sources and the client key in SSH/SSL.",
+  "managerTitle": "Data Sources and Drivers",
+  "sourceListTitle": "Data Sources",
+  "driverLabel": "Driver",
+  "connectionTypeLabel": "Connection type",
+  "defaultTcp": "Default (TCP)",
+  "authenticationLabel": "Authentication",
+  "userPasswordAuth": "User & Password",
+  "neverStorage": "Never",
+  "initialDatabaseLabel": "Initial database",
+  "useSshTunnel": "Use SSH tunnel",
+  "sshConfigurationLabel": "SSH configuration",
+  "createSshConfig": "<create configuration>",
+  "copySshSettings": "Copy SSH settings",
+  "localPortLabel": "Local port",
+  "dynamicPortLabel": "<Dynamic>",
+  "useSsl": "Use SSL",
+  "useTruststore": "Use truststore",
+  "clientKeyPasswordLabel": "Client key password",
+  "modeLabel": "Mode",
+  "requireTls": "Require",
+  "verifyCa": "Verify CA",
+  "fullVerification": "Full Verification",
+  "connectionSection": "Connection",
+  "configurationApplied": "Configuration applied",
+  "noOtherSshConfig": "No other source has an SSH configuration.",
+  "generatedUrlHelp": "Generated, read-only JDBC address.",
+  "tlsDriverDefaultHelp": "SSL is unconfigured; the bundled driver uses its default.",
+  "tlsClientKeyHelp": "PEM keys: PKCS#8 or OpenSSL; encrypted or unencrypted.",
+  "legacyMariaTrustHelp": "Existing driver verification is retained. Select trust sources to configure explicit roots.",
+  "metadataStartValue": "Start value",
+  "metadataMinimumValue": "Minimum value",
+  "metadataMaximumValue": "Maximum value",
+  "metadataIncrement": "Increment",
+  "metadataCycle": "Cycle",
+  "metadataCacheSize": "Cache size",
+  "metadataLastValue": "Last value",
+  "sequences": "Sequences",
+  "namespaceSelection": "Select namespaces",
+  "namespaceSelectionNotice": "Selection controls introspection. Query consoles keep their execution context.",
+  "allNamespaces": "All Namespaces",
+  "defaultNamespace": "Default",
+  "namespacePattern": "Name pattern (regular expression)",
+  "namespaceCount": "{selected} of {known}",
+  "previousPage": "Previous page",
+  "patternRejected": "The pattern is invalid or exceeds its work limit. The previous selection is retained.",
+  "namespaceNotSelected": "Namespace not selected for introspection",
+  "@namespaceCount": {
+    "placeholders": {
+      "selected": {
+        "type": "int"
+      },
+      "known": {
+        "type": "int"
+      }
+    }
+  },
+  "newMenu": "New",
+  "queryConsoles": "Query consoles",
+  "viewOptions": "View options",
+  "quickDocumentation": "Quick Documentation",
+  "showEmptyGroups": "Show empty groups",
+  "speedSearch": "Speed Search",
+  "speedSearchScope": "Expanded, loaded nodes only.",
+  "newSourceFolder": "New source folder",
+  "renameSourceFolder": "Rename folder",
+  "moveToFolder": "Move to folder",
+  "moveUp": "Move up",
+  "moveDown": "Move down",
+  "folderMustBeEmpty": "Move contained sources and folders before removing this folder.",
+  "newVirtualView": "New virtual view",
+  "editVirtualDefinition": "Edit local definition",
+  "unboundVirtualView": "Unbound virtual views",
+  "localVirtualViewNotice": "Local SQL definition. Saving does not execute SQL or create a server view. Run uses the normal SQL review and an independent console.",
+  "rebindVirtualView": "Rebind local definition here",
+  "sourceFolderName": "Folder name",
+  "sourceFolderPathNotice": "Use / to create nested folders.",
+  "topLevel": "Top level",
+  "virtualViewName": "Virtual view name",
+  "virtualViewSql": "Virtual view SQL definition",
+  "virtualViews": "Virtual views",
+  "revealInExplorer": "Reveal in Database Explorer",
+  "objectNotFound": "Object not found in this namespace; refresh metadata or check permissions.",
+  "objectHiddenByFilter": "Object is hidden by the current view filter.",
+  "revealFilterNotice": "Object lookup narrows this page; the full category total is omitted.",
+  "clearObjectFilter": "Clear object lookup",
+  "compareStructure": "Compare structure",
+  "selectTwoCompatibleObjects": "Select two compatible tables using Ctrl-click.",
+  "scopedComparisonRestriction": "Scoped comparison requires ordinary tables with the same native name, schema and engine. Other kinds and rename matching are unavailable.",
+  "groupNamespaces": "Group databases and schemas",
+  "groupSchemaObjects": "Group schema objects",
+  "groupTableElements": "Group table elements",
+  "sortAlphabetically": "Sort alphabetically",
+  "showVirtualObjects": "Show virtual objects",
+  "showObjectComments": "Show object comments",
+  "objectTypeFilter": "Object type filter",
+  "partitionedTable": "Partitioned table",
+  "foreignTable": "Foreign table",
+  "materializedView": "Materialized view",
+  "functionObject": "Function",
+  "procedureObject": "Procedure",
+  "sqlSymbolUnavailable": "No safely resolved persistent object at the caret. Connect this console and use a table or view reference outside literals and comments.",
+  "sqlSymbolAmbiguous": "Ambiguous SQL object reference. Qualify its namespace or choose an exact database object.",
+  "deactivateSource": "Deactivate source",
+  "functions": "Functions",
+  "procedures": "Procedures",
+  "separateProceduresFunctions": "Separate procedures and functions",
+  "renameVirtualView": "Rename virtual view",
+  "metadataPersistentScope": "Persistent objects only; temporary/session-local objects remain in console navigation.",
+  "metadataSessionScope": "Persistent objects only; refresh console-local objects after execution.",
+  "metadataLimitScope": "Metadata limit reached. Narrow the object scope.",
+  "completeColumnMetadataRequired": "Complete column metadata is required before importing or staging changes.",
+  "resizeColumn": "Resize column {name}",
+  "@resizeColumn": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "keyboardShortcutsHeading": "Keyboard shortcuts",
+  "sqlEditorLabel": "SQL editor {title}",
+  "@sqlEditorLabel": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "editorResultsDivider": "Editor and results divider",
+  "editorExtent": "{percent} percent editor",
+  "@editorExtent": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "largerEditor": "Larger editor",
+  "smallerEditor": "Smaller editor",
+  "explorerWidthDivider": "Explorer width divider",
+  "widerExplorer": "Wider Explorer",
+  "narrowerExplorer": "Narrower Explorer",
+  "explorerExtent": "{width} pixels wide",
+  "@explorerExtent": {
+    "placeholders": {
+      "width": {
+        "type": "String"
+      }
+    }
+  },
+  "planTextPage": "{start}–{end} of {total} UTF-16 units",
+  "@planTextPage": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "dropDesignedColumn": "Drop column",
+  "liveCatalogLabel": "Live catalog",
+  "liveSchemaLabel": "Live schema",
+  "searchPathLabel": "Search path",
+  "physicalSessionLabel": "Physical session",
+  "queryTimeoutDetail": "Timeout: {seconds} s · Row limit: {rows}",
+  "@queryTimeoutDetail": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      },
+      "rows": {
+        "type": "String"
+      }
+    }
+  },
+  "saveFailedCloseTitle": "SQL save failed · Close BusyData",
+  "createSection": "Create",
+  "newConnectionDescription": "Configure a database connection",
+  "newQueryDescription": "Write SQL in a new query",
+  "openSqlDescription": "Open an existing SQL document",
+  "searchNoResults": "No matching actions",
+  "actionsCategory": "Actions",
+  "privateRecoveryCategory": "Private recovery",
+  "shortcutRecordHelp": "Press a shortcut. Escape cancels. F6 and Shift+F6 are reserved for pane navigation.",
+  "rowLimitInvalid": "Enter a row limit from 1 to 1,000,000.",
+  "errorPolicy": "On execution error",
+  "tlsEncrypted": "encrypted",
+  "tlsUnencrypted": "unencrypted",
+  "tlsUnobserved": "unobserved",
+  "encryptionVerificationNote": "Encryption does not establish certificate or hostname verification.",
+  "uniqueDesignedColumnName": "Use a unique column name; new tables support up to 128 columns",
+  "activityBlockerUnavailable": "Blocker {id} is no longer visible; refresh and check database permissions",
+  "sshChangedKeyReview": "Verify the changed key independently before replacing this profile binding.",
+  "sshProfileTrustBinding": "Trust applies only to this profile and exact endpoint.",
+  "databaseTlsEvidence": "Database TLS",
+  "sshAlgorithmLabel": "Algorithm",
+  "sshFingerprintLabel": "Fingerprint",
+  "sshPreviousFingerprintLabel": "Previous fingerprint",
+  "sshReviewedLabel": "Reviewed",
+  "@activityBlockerUnavailable": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "shortcutRecordAction": "Record shortcut",
+  "fileFormatLabel": "File format",
+  "encodingLabel": "Encoding",
+  "importPolicyLabel": "Import policy",
+  "mainMenu": "Main menu",
+  "activityReplyTooLarge": "Activity response exceeds the inspector limit.",
+  "activityListLimited": "List limited; inspect a narrower target with explicit SQL.",
+  "activitySelectionChanged": "The selected activity ended or changed. Select its current identity before reviewing an action.",
+  "connectionSavedDraftChanged": "Connection fields changed while saving; configuration was saved: {name}. Review the current values before connecting.",
+  "@connectionSavedDraftChanged": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "sshReviewTargetChanged": "SSH review target changed; review again",
+  "appearance": "Appearance",
+  "theme": "Theme",
+  "systemTheme": "System",
+  "lightTheme": "Light",
+  "darkTheme": "Dark",
+  "appLanguage": "Language",
+  "systemLanguage": "System",
+  "cut": "Cut",
+  "paste": "Paste",
+  "selectAll": "Select all",
+  "noSelection": "No text is available",
+  "clipboardEmpty": "The clipboard has no text",
+  "settingsDraftNotice": "Execution and private recovery changes have not been saved.",
+  "documentsMenu": "Documents",
+  "currentSql": "Current SQL",
+  "searchActionsHint": "Search actions…",
+  "searchCurrentSqlHint": "Search current SQL…",
+  "searchObjectsHint": "Search database objects…",
+  "searchHistoryHint": "Search query history…",
+  "metadataAttributes": "Attributes",
+  "metadataSelectionUnavailable": "Select an item to inspect its captured properties. The previous selection is unavailable.",
+  "secureStorage": "OS secure storage",
+  "resultPresentation": "View as",
+  "resultTable": "Table",
+  "resultTranspose": "Transpose",
+  "resultTree": "Tree",
+  "resultText": "Text",
+  "recordView": "Record View",
+  "valueEditor": "Value Editor",
+  "aggregateView": "Aggregate View",
+  "relatedRows": "Related Rows",
+  "cloneRow": "Clone Row",
+  "displayFormat": "Display format",
+  "canonicalValue": "Canonical / raw",
+  "groupedNumber": "Numeric grouping",
+  "jsonPretty": "JSON formatted text",
+  "binaryHex": "Binary hexadecimal",
+  "binaryBase64": "Binary Base64",
+  "uuidPresentation": "UUID (16 bytes)",
+  "wrapText": "Wrap text",
+  "selectedCellsScope": "Selected cells only",
+  "retainedWindowScope": "Current retained window only",
+  "serverDataOperations": "Server-side table sorting and filtering",
+  "localDataOperations": "Local sorting and filtering of retained data",
+  "partialRetainedScope": "Partial retained result; this view does not represent the complete server table.",
+  "valueComplete": "Complete retained value",
+  "valueTruncated": "Truncated preview; the complete value is retained.",
+  "loadValueChunk": "Load next 64 KiB",
+  "resetValueChunks": "Reset value preview",
+  "structuredParseError": "Structured interpretation is unavailable; exact raw content remains accessible.",
+  "structuredValueLimit": "Structured display is limited to 256 KiB, 4,096 nodes and 32 levels.",
+  "valueChunkRange": "Bytes {start}–{end} of {total}",
+  "@valueChunkRange": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "presentationScopeLimit": "This presentation exceeds its bounded scope. Select fewer cells or use Export.",
+  "transposeSelectionLimit": "Transpose shows at most 32 selected rows. Narrow the selection to inspect another range.",
+  "jsonTree": "JSON tree",
+  "xmlInterpretation": "XML interpretation",
+  "imagePreview": "Image preview",
+  "imagePreviewUnavailable": "Image preview requires recognized image bytes within the 1 MiB / 4 megapixel limit.",
+  "valueDraftLimit": "Value drafts exceed the shared 1 MiB text / 2 MiB complete-value limit. Stage or discard another draft first.",
+  "valueDraftPreserved": "Value draft preserved; stored value is unchanged.",
+  "setDefault": "Set DEFAULT",
+  "assignmentUnset": "Unchanged / unset",
+  "assignmentValue": "Exact value",
+  "assignmentNull": "SQL NULL",
+  "assignmentDefault": "Server DEFAULT",
+  "originalValue": "Original value",
+  "stagedValue": "Staged value",
+  "noRelatedRows": "No available relationships for this retained row.",
+  "aggregateSelectedCount": "Selected count",
+  "aggregateNonNull": "Non-NULL count",
+  "aggregateNull": "NULL count",
+  "aggregateDistinct": "Distinct count",
+  "aggregateSum": "Sum",
+  "aggregateAverage": "Average",
+  "aggregateMinimum": "Minimum",
+  "aggregateMaximum": "Maximum",
+  "aggregateStoredValues": "Aggregates use original retained values; staged edits are excluded.",
+  "relatedRowsUnavailable": "Related-row navigation requires complete metadata and verified retained provenance.",
+  "stagedInsertReview": "Clone staged as an insert. Review and edit its assignments before Apply.",
+  "rawValue": "Raw value",
+  "previousRecord": "Previous record",
+  "nextRecord": "Next record",
+  "binaryInputError": "Enter complete hexadecimal bytes or valid Base64 for the selected binary mode.",
+  "valueChunkEncoding": "This byte page begins or ends inside a UTF-8 character. Use hexadecimal or export the complete value.",
+  "copyDisplayedText": "Copy displayed text",
+  "requiredColumn": "NOT NULL",
+  "editStagedInserts": "Edit staged inserts",
+  "metadataSettings": "Metadata and introspection",
+  "metadataIncludeCatalogs": "Included databases (one exact name per line; empty uses current database)",
+  "metadataExcludeCatalogs": "Excluded databases",
+  "metadataIncludeSchemas": "Included schemas (empty uses current resolution path)",
+  "metadataExcludeSchemas": "Excluded schemas",
+  "metadataIncludePatterns": "Included object patterns",
+  "metadataExcludePatterns": "Excluded object patterns",
+  "metadataSystemObjects": "Include system objects",
+  "metadataDefaultLevel": "Default introspection level",
+  "metadataLevelNames": "Names and identities",
+  "metadataLevelStructure": "Structure",
+  "metadataLevelSource": "Structure and source",
+  "metadataFullRefresh": "Full refresh",
+  "metadataIncrementalRefresh": "Incremental refresh",
+  "metadataScopeLevels": "Scope levels: catalog / schema / level, one per line",
+  "metadataCacheState": "Cache state",
+  "metadataConfigurationChanged": "Metadata configuration changed; reopen to review current settings",
+  "metadataAddScope": "Add scope level",
+  "metadataAddName": "Add exact name",
+  "metadataObjectKinds": "Object kinds",
+  "metadataLastRefresh": "Last successful refresh",
+  "metadataPatternsNote": "Patterns use * for any characters and ? for one character. Names remain exact database identifiers.",
+  "sqlLanguage": "SQL language",
+  "sqlDialect": "SQL dialect",
+  "sqlPostgresql": "PostgreSQL",
+  "sqlMysql": "MySQL",
+  "sqlMariadb": "MariaDB",
+  "sqlPreferenceScope": "Settings scope",
+  "sqlDialectDefaults": "Dialect defaults",
+  "sqlDialectDefaultsDescription": "Applies to SQL documents using this dialect unless their connection has an override.",
+  "sqlProfileOverrideDescription": "Applies only to SQL documents owned by the selected connection.",
+  "sqlUseDialectDefaults": "Use dialect defaults for this connection",
+  "sqlFormatting": "SQL formatting",
+  "sqlKeywordCase": "Keyword case",
+  "sqlPreserveCase": "Preserve case",
+  "sqlUpperCase": "Uppercase",
+  "sqlLowerCase": "Lowercase",
+  "sqlIndentationWidth": "Indentation width",
+  "sqlContinuationIndent": "Continuation indentation",
+  "sqlClauseBreaks": "Start clauses on new lines",
+  "sqlJoinLayout": "JOIN layout",
+  "sqlNewLine": "New line",
+  "sqlSameLine": "Same line",
+  "sqlCommaPlacement": "Comma placement",
+  "sqlLeading": "Leading",
+  "sqlTrailing": "Trailing",
+  "sqlLogicalPlacement": "Logical operator placement",
+  "sqlWrapLists": "Wrap field and assignment lists",
+  "sqlWrapArguments": "Wrap function arguments",
+  "sqlIndentSubqueries": "Indent subqueries",
+  "sqlCteBreaks": "Separate common table expressions",
+  "sqlParenthesisSpacing": "Space inside parentheses",
+  "sqlOperatorSpacing": "Space around operators",
+  "sqlAlignment": "Align wrapped assignments",
+  "sqlMaximumLine": "Maximum line length",
+  "sqlPreserveBlankLines": "Preserve intentional blank lines",
+  "sqlInspections": "SQL inspections",
+  "sqlInspectionDisabled": "Disabled",
+  "sqlSeverityError": "Error",
+  "sqlSeverityWarning": "Warning",
+  "sqlSeverityInformation": "Information",
+  "sqlSeverityHint": "Hint",
+  "sqlInspectionUpdateWhere": "UPDATE without WHERE",
+  "sqlInspectionDeleteWhere": "DELETE without WHERE",
+  "sqlInspectionRelation": "Unresolved relation",
+  "sqlInspectionColumn": "Unresolved column",
+  "sqlInspectionAmbiguous": "Ambiguous column",
+  "sqlInspectionDerived": "Invalid derived-table column",
+  "sqlInspectionDuplicateAlias": "Duplicate relation alias",
+  "sqlInspectionDuplicateCte": "Duplicate common table expression",
+  "sqlInspectionDuplicateInsert": "Duplicate INSERT column",
+  "sqlInspectionInsertTarget": "Unknown INSERT target column",
+  "sqlInspectionUpdateTarget": "Unknown UPDATE target column",
+  "sqlInspectionArguments": "Invalid routine argument count",
+  "sqlInspectionOverload": "No matching routine overload",
+  "sqlInspectionAggregate": "Invalid aggregate or window expression",
+  "sqlInspectionComparison": "Incompatible comparison types",
+  "sqlInspectionAssignment": "Incompatible assignment type",
+  "parameterInformation": "Parameter information",
+  "activeArgument": "Active argument: {index}",
+  "@activeArgument": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "numericScale2": "Numeric grouping · 2 decimal places",
+  "numericScale4": "Numeric grouping · 4 decimal places",
+  "temporalDate": "Temporal date · yyyy-MM-dd",
+  "temporalTime": "Temporal time · ISO",
+  "temporalUtc": "Timestamp · UTC (requires explicit offset)",
+  "temporalLocal": "Timestamp · local timezone (requires explicit offset)",
+  "formatCurrentStatement": "Format current statement",
+  "completionLimited": "More matches are available. Type a longer prefix.",
+  "parameterInformationLimited": "More overloads exist; parameter information is limited.",
+  "sqlInspectionSyntax": "SQL syntax error",
+  "sqlInspectionDialect": "SQL construct is unavailable for this dialect",
+  "sqlInspectionUnavailable": "SQL analysis is unavailable for this construct",
+  "sqlInspectionUnknownFunction": "Unknown routine",
+  "sqlInspectionMetadata": "SQL inspection is incomplete because metadata is unavailable",
+  "sqlDiagnosticsEmpty": "No SQL inspections were reported for this document.",
+  "sqlDiagnosticSpan": "UTF-16 {start}–{end} · {source}",
+  "@sqlDiagnosticSpan": {
+    "placeholders": {
+      "start": {
+        "type": "int"
+      },
+      "end": {
+        "type": "int"
+      },
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "sqlDiagnosticGo": "Go to SQL span",
+  "sqlDiagnosticFix": "Apply selected correction",
+  "sqlDiagnosticReplacement": "Replacement text",
+  "sqlDiagnosticStale": "SQL inspection context changed. Request inspections again.",
+  "sqlDiagnosticUnavailable": "SQL inspections are unavailable for the current document.",
+  "sqlDiagnosticCount": "{count} SQL inspections",
+  "@sqlDiagnosticCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aggregateTextOrder": "Text minimum/maximum use retained UTF-16 ordinal order; database collation is not applied.",
+  "aggregateMixedTypes": "The selected values have incompatible types. Select values with a common type.",
+  "aggregateUnsupportedOrder": "Ordering and numeric calculations are unavailable for this value type.",
+  "relatedKeyNotProjected": "Select all relationship key columns in the source result before navigating.",
+  "relatedNullKey": "A NULL relationship key has no matching related row.",
+  "relatedTargetUnavailable": "The relationship target is outside this session’s supported database scope.",
+  "relatedValueLimited": "The relationship key is truncated or exceeds navigation limits. Browse the target explicitly.",
+  "temporalCustomPattern": "Temporal · custom pattern",
+  "temporalPattern": "Temporal display pattern",
+  "temporalSourceZone": "Original calendar fields",
+  "temporalZone": "Display timezone",
+  "temporalPatternHelp": "Use ICU calendar fields and up to six S digits for exact fractions. UTC/local conversion requires an explicit offset. Unsupported temporal values remain raw.",
+  "temporalPatternInvalid": "Use a pattern of 1–128 characters with supported calendar fields, balanced quotes, and at most six S digits. Timezone letters z, Z and v are unsupported; choose the display timezone separately.",
+  "editCompleteValue": "Edit complete value",
+  "completeValueEditLimit": "Complete editing requires verified retained ownership, at most 1 MiB across original and new values, and 262,144 text units per value. Larger values remain available for export.",
+  "completeValueReady": "Complete retained value loaded for editing; changes are staged only.",
+  "binaryNextEditPage": "Next 16 KiB",
+  "binaryPreviousEditPage": "Previous 16 KiB",
+  "arrayEditLimit": "Array edits use exact native PostgreSQL text, at most 16 KiB of text, six dimensions and 1,024 scalar values. Java validates the captured element type.",
+  "valueChangedDuringStage": "The earlier value was staged. Your newer draft is preserved; review it before staging again.",
+  "textValuePage": "Text page {current} of {total}",
+  "@textValuePage": {
+    "description": "Bounded native value/text presentation.",
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "textValuePagesScope": "Only this text page is shown. Copy and export actions keep their stated scope.",
+  "@textValuePagesScope": {
+    "description": "Bounded native value/text presentation."
+  },
+  "textValueEditScope": "Stage change includes every text page.",
+  "@textValueEditScope": {
+    "description": "Bounded native value/text presentation."
+  },
+  "textValuePreviousPage": "Previous text page",
+  "@textValuePreviousPage": {
+    "description": "Bounded native value/text presentation."
+  },
+  "textValueNextPage": "Next text page",
+  "@textValueNextPage": {
+    "description": "Bounded native value/text presentation."
+  },
+  "valuePageEditLimit": "That text is invalid or too large for this page. The previous text was kept.",
+  "@valuePageEditLimit": {
+    "description": "Bounded native value/text presentation."
+  },
+  "valueAddEditPage": "Add editing page",
+  "@valueAddEditPage": {
+    "description": "Bounded value editing control."
+  },
+  "binaryAppendPageReason": "Finish a valid, full last binary page before adding another page. Bytes are never padded.",
+  "@binaryAppendPageReason": {
+    "description": "Bounded value editing control."
+  },
+  "valueEditorActions": "Value actions",
+  "@valueEditorActions": {
+    "description": "Bounded native value presentation."
+  },
+  "utf8Hex": "UTF-8 hexadecimal",
+  "@utf8Hex": {
+    "description": "Bounded native value presentation."
+  },
+  "utf8Base64": "UTF-8 Base64",
+  "@utf8Base64": {
+    "description": "Bounded native value presentation."
+  },
+  "nativeTextNulUnavailable": "Plain text editing is unavailable for values containing a NUL character. UTF-8 byte views and exact export remain available.",
+  "@nativeTextNulUnavailable": {
+    "description": "Bounded native value presentation."
+  },
+  "textClipboardNulUnavailable": "This text contains a NUL character and cannot be copied exactly. Export the value or choose another extractor.",
+  "@textClipboardNulUnavailable": {
+    "description": "Bounded native value presentation."
+  },
+  "sqlVisibleLine": "Visible SQL line {line} of {total}, column {column}",
+  "sqlLinePreviewTruncated": "Line preview truncated",
+  "sqlActiveCarets": "{count} carets active",
+  "sqlCompositionActive": "Input composition active",
+  "@sqlVisibleLine": {
+    "placeholders": {
+      "line": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "column": {
+        "type": "int"
+      }
+    }
+  },
+  "@sqlActiveCarets": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sqlEditorDocumentLimit": "The edit exceeds the 8M UTF-16 document limit. Use a smaller document.",
+  "sqlEditorLineLimit": "The edit exceeds the 100,000-line document limit. Use a smaller document.",
+  "sqlEditorCaretLimit": "The editor supports at most 64 carets. Remove extra carets before adding more.",
+  "sqlEditorFinishComposition": "Finish input composition before changing this selection.",
+  "sqlEditorClipboardLimit": "The exact selection exceeds the 1 MiB clipboard limit. Save or export the text instead.",
+  "sqlEditorSelectionUnavailable": "The editor cannot apply this selection. The original SQL is retained.",
+  "sqlEditorClipboardUnavailable": "The clipboard is unavailable. Your SQL and selection have been kept.",
+  "metadataCacheWriteUnavailable": "The cache could not be saved. Current metadata remains available.",
+  "metadataCacheRebuiltVersion": "Rebuilt for the current version",
+  "metadataCacheRebuiltCorrupt": "Rebuilt after a cache error",
+  "editSessionBusy": "This session is busy. Wait for its current work to finish, then request a fresh editing assessment.",
+  "editIdentityRequired": "Select a complete primary key or non-nullable unique identity before editing.",
+  "editColumnsReadOnly": "All projected columns are generated or read-only.",
+  "editResultNotReady": "Wait for this retained result to finish before requesting a fresh editing assessment.",
+  "editProjectionUnsupported": "Editing requires a direct SELECT from one base table with each base column projected once.",
+  "sqlInspectionDuplicateUsingColumn": "Duplicate JOIN USING column",
+  "sqlInspectionUnresolvedUsingColumn": "JOIN USING column missing from an operand",
+  "sqlInspectionAmbiguousUsingColumn": "Ambiguous shared JOIN column",
+  "sqlInspectionOutputColumnCount": "Declared output column count mismatch",
+  "sqlInspectionAmbiguousOverload": "Ambiguous routine overload",
+  "sqlInspectionBooleanType": "Invalid Boolean expression type",
+  "sqlInspectionOperatorTypes": "Incompatible operator operand types",
+  "sqlInspectionArrayTypes": "Incompatible array element types",
+  "sqlInspectionCaseConditionType": "Incompatible CASE condition type",
+  "sqlInspectionCaseResultTypes": "Incompatible CASE result types",
+  "sqlInspectionCoalesceTypes": "Incompatible COALESCE argument types",
+  "sqlInspectionSetColumnCount": "Set operation column count mismatch",
+  "sqlInspectionSetTypes": "Incompatible set operation result types",
+  "sqlInspectionRecursiveCteType": "Recursive CTE type mismatch"
+}

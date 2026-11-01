@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="busydata-backend-0.1.0">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/backend/target/busydata-backend-0.1.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

@@ -1,0 +1,12 @@
+include: package:flutter_lints/flutter.yaml
+analyzer:
+  exclude:
+    - third_party/**
+    - lib/src/backend/generated/**
+    - build/**
+    - windows/**
+    - linux/**
+
+linter:
+  rules:
+    prefer_initializing_formals: false

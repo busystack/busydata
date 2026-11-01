@@ -1,0 +1,62 @@
+name: BusyData source and unit checks
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  source-unit:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25.0.4.1+1'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.5'
+          channel: stable
+      - name: Verify pinned toolchains
+        run: |
+          flutter_executable="$(readlink -f "$(command -v flutter)")"
+          dart_executable="$(dirname "$flutter_executable")/cache/dart-sdk/bin/dart"
+          python3 tool/check_toolchain.py
+          "$dart_executable" tool/verify_flutter_sdk.dart --flutter "$flutter_executable" --dart "$dart_executable" --toolchain config/toolchain.json
+      - name: Resolve locked dependencies and generate localizations
+        run: |
+          mkdir -p build/official-dependencies/pub-cache build/t
+          export PUB_CACHE="$PWD/build/official-dependencies/pub-cache"
+          export TMPDIR="$PWD/build/t"
+          echo "PUB_CACHE=$PUB_CACHE" >> "$GITHUB_ENV"
+          echo "TMPDIR=$TMPDIR" >> "$GITHUB_ENV"
+          flutter pub get --enforce-lockfile
+          python3 tool/verify_official_dependencies.py
+          flutter gen-l10n
+      - name: Java unit tests and protocol generation
+        run: |
+          mkdir -p build/routine
+          backend/mvnw -f backend/pom.xml verify 2>&1 | tee build/routine/java.log
+          python3 tool/generate_protocol.py
+      - name: Formatting, analysis and platform boundaries
+        run: |
+          dart format --output=none --set-exit-if-changed lib test tool integration_test
+          flutter analyze
+          dart run tool/check_platform_boundaries.dart
+          git diff --exit-code -- pubspec.lock lib/src/backend/generated lib/l10n
+      - name: Complete Flutter unit and widget suite
+        run: flutter test --machine --no-pub 2>&1 | tee build/routine/flutter-tests.jsonl
+      - name: Python tooling unit suite
+        run: python3 -m unittest discover -s tool -p 'test_*.py' 2>&1 | tee build/routine/python-tests.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: source-unit-results
+          retention-days: 7
+          path: |
+            build/routine/
+            build/official-dependencies/verification.json
+            backend/target/surefire-reports/

@@ -1,0 +1,20 @@
+[
+  {
+    "name": "postgresql-17.11.tar.bz2",
+    "url": "https://ftp.postgresql.org/pub/source/v17.11/postgresql-17.11.tar.bz2",
+    "sha256": "dd27f2b3c59e73ed14aa3324901242bf69a032a6347805f274e6260322d42979",
+    "engine": "postgresql"
+  },
+  {
+    "name": "mysql-8.4.10.tar.gz",
+    "url": "https://cdn.mysql.com/Downloads/MySQL-8.4/mysql-8.4.10.tar.gz",
+    "sha256": "d57a6730baef14ae118f7f4a6e02845b5b50933758df61fb06e104f27ccc8f96",
+    "engine": "mysql"
+  },
+  {
+    "name": "mariadb-11.8.9.tar.gz",
+    "url": "https://archive.mariadb.org/mariadb-11.8.9/source/mariadb-11.8.9.tar.gz",
+    "sha256": "2e015b7e91004142eda8b3a20d3ceb875cf2ae55e72603e7222cd497d4e56fc6",
+    "engine": "mariadb"
+  }
+]

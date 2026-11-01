@@ -1,0 +1,17 @@
+package io.busystack.busydata.metadata;
+
+import io.busystack.busydata.protocol.*;
+import java.util.*;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+class MetadataCoverageReconciliationTest {
+    private static MetadataScope scope(String schema,String name){return new MetadataScope("db",schema,"",ObjectKind.TABLE,name,!name.isEmpty(),"",ObjectSubtype.OBJECT_SUBTYPE_UNSPECIFIED);}
+    private static MetadataCoverage coverage(MetadataScope scope,IntrospectionLevel level){return new MetadataCoverage(scope,level,MetadataState.AVAILABLE,true,"verified",1,1,123,"");}
+    private static MetadataObject object(String schema,String name,String id,IntrospectionLevel level){return MetadataObject.from("source","profile","",new IdentifierRules(Engine.POSTGRESQL,0),SchemaObject.newBuilder().setCatalog("db").setSchema(schema).setName(name).setKind(ObjectKind.TABLE).setSubtype(ObjectSubtype.ORDINARY_TABLE).putProperties("nativeId",id).setDefinition(level==IntrospectionLevel.SOURCE?"CREATE TABLE "+name+"(n INTEGER)":"").build(),level,1,1);}
+    @Test void aStructuralReplacementCannotLeaveMatchingSourceCoverageComplete(){var broad=scope("public","");var kept=scope("public","kept");var changed=scope("public","changed");var states=Map.of(broad,coverage(broad,IntrospectionLevel.SOURCE),kept,coverage(kept,IntrospectionLevel.SOURCE),changed,coverage(changed,IntrospectionLevel.SOURCE));var result=MetadataCoverageReconciliation.invalidated(states,changed,List.of(object("public","changed","2",IntrospectionLevel.SOURCE)),List.of(object("public","changed","2",IntrospectionLevel.STRUCTURE)));assertEquals(Set.of(broad),result);}
+    @Test void verifiedHigherObjectsSurviveAMixedNamesReconciliation(){var broad=scope("public","");var kept=scope("public","kept");var exact=object("public","kept","1",IntrospectionLevel.SOURCE);var result=MetadataCoverageReconciliation.invalidated(Map.of(broad,coverage(broad,IntrospectionLevel.SOURCE),kept,coverage(kept,IntrospectionLevel.SOURCE)),broad,List.of(exact),List.of(exact,object("public","created","2",IntrospectionLevel.NAMES)));assertTrue(result.isEmpty());}
+    @Test void deletingAnIdentityInvalidatesItsBroaderProofWithoutInvalidatingUnrelatedExactSource(){var broad=scope("public","");var kept=scope("public","kept");var gone=scope("public","gone");var result=MetadataCoverageReconciliation.invalidated(Map.of(broad,coverage(broad,IntrospectionLevel.SOURCE),kept,coverage(kept,IntrospectionLevel.SOURCE)),gone,List.of(object("public","gone","2",IntrospectionLevel.SOURCE)),List.of());assertEquals(Set.of(broad),result);}
+    @Test void movingOneNativeIdentityInvalidatesBothNamespaceEnumerations(){var old=scope("before","");var moved=scope("after","");var result=MetadataCoverageReconciliation.invalidated(Map.of(old,coverage(old,IntrospectionLevel.SOURCE),moved,coverage(moved,IntrospectionLevel.SOURCE)),scope("after","same"),List.of(object("before","same","7",IntrospectionLevel.SOURCE)),List.of(object("after","same","7",IntrospectionLevel.SOURCE)));assertEquals(Set.of(old,moved),result);}
+    @Test void denialAndExistingStaleReasonsAreNotReplacedByADowngrade(){var broad=scope("public","");var denied=new MetadataCoverage(broad,IntrospectionLevel.SOURCE,MetadataState.DENIED,false,"old",1,1,123,"Permission denied");assertTrue(MetadataCoverageReconciliation.invalidated(Map.of(broad,denied),scope("public","changed"),List.of(object("public","changed","2",IntrospectionLevel.SOURCE)),List.of(object("public","changed","2",IntrospectionLevel.NAMES))).isEmpty());}
+}

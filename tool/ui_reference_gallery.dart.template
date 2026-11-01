@@ -1,0 +1,394 @@
+// Current-source production component comparison; no feature models are copied.
+
+import 'dart:io';
+import 'dart:ui' as ui;
+import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:yaru/yaru.dart';
+import 'package:busymark/src/app/busymark_design.dart';
+import 'package:busymark/src/app/app_theme.dart';
+import 'package:busymark/src/app/busymark_glyphs.dart';
+
+void registerRealFonts() {
+  setUpAll(() async {
+    await (FontLoader('MaterialIcons')..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'))).load();
+    final ubuntu = FontLoader('packages/yaru/Ubuntu');
+    for (final name in ['L', 'R', 'M', 'B']) {
+      ubuntu.addFont(rootBundle.load('packages/yaru/assets/fonts/Ubuntu-$name.ttf'));
+    }
+    await ubuntu.load();
+    for (final family in ['Ubuntu', 'Ubuntu Sans', 'Ubuntu Mono', 'Noto Sans Arabic', 'Noto Sans', 'DejaVu Sans']) {
+      final resolved = await Process.run('fc-match', ['--format=%{file}', family]);
+      if (resolved.exitCode != 0 || (resolved.stdout as String).isEmpty) throw StateError('Missing real comparison font: $family');
+      await (FontLoader(family)..addFont(Future.value(ByteData.sublistView(File(resolved.stdout as String).readAsBytesSync())))).load();
+    }
+    await (FontLoader(
+      'packages/yaru/YaruIcons',
+    )..addFont(rootBundle.load('packages/yaru/assets/yaru_icons.otf'))).load();
+  });
+}
+
+Future<void> main() async {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  registerRealFonts();
+  for (final brightness in Brightness.values) {
+    testWidgets('current production components ${brightness.name}', (
+      tester,
+    ) async {
+      final previousPlatform = debugDefaultTargetPlatformOverride;
+      debugDefaultTargetPlatformOverride = TargetPlatform.linux;
+      await tester.binding.setSurfaceSize(const Size(860, 1120));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final previousShadows = debugDisableShadows;
+      debugDisableShadows = false;
+      addTearDown(() => debugDisableShadows = true);
+      final messenger = tester.binding.defaultBinaryMessenger;
+      messenger.setMockMethodCallHandler(
+        const MethodChannel('yaru_window'),
+        (_) async => <String, Object>{},
+      );
+      messenger.setMockMethodCallHandler(
+        const MethodChannel('yaru_window/events'),
+        (_) async => null,
+      );
+      // Exercise the production Flutter fallback; a successful null native
+      // response means the native popup was dismissed without a selection.
+      messenger.setMockMethodCallHandler(
+        const MethodChannel('busymark/native_menus'),
+        (_) async => throw MissingPluginException(),
+      );
+      addTearDown(() => messenger.setMockMethodCallHandler(
+        const MethodChannel('busymark/native_menus'),
+        null,
+      ));
+      final directory = Directory(
+        Platform.environment['BUSYDATA_UI_REFERENCE_GALLERY_OUTPUT'] ?? 'build/ui-reference-gallery',
+      )..createSync(recursive: true);
+      final boundary = GlobalKey();
+      final host = TextEditingController(text: 'db.example.test');
+
+      final stateOwners = <WidgetStatesController, Set<WidgetState>>{};
+      Widget button(BuildContext context, int role, Set<WidgetState> states) {
+        final state = WidgetStatesController(states);
+        stateOwners[state] = states;
+        final action = states.contains(WidgetState.disabled) ? null : () {};
+        return switch (role) {
+          0 => BusyMarkPushButton.standard(
+            onPressed: action,
+            statesController: state,
+            child: const Text('Test connection'),
+          ),
+          1 => BusyMarkPushButton.suggested(
+            onPressed: action,
+            statesController: state,
+            child: const Text('Save & connect'),
+          ),
+          _ => BusyMarkPushButton.destructive(
+            context: context,
+            onPressed: action,
+            statesController: state,
+            child: const Text('Delete connection'),
+          ),
+        };
+      }
+
+      Future<void> capture(String name) async {
+        await tester.pumpAndSettle();
+        final render =
+            boundary.currentContext!.findRenderObject()
+                as RenderRepaintBoundary;
+        await tester.runAsync(() async {
+          final image = await render.toImage();
+          final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+          await File(
+            '${directory.path}/${brightness.name}-$name.png',
+          ).writeAsBytes(bytes!.buffer.asUint8List());
+          image.dispose();
+        });
+        expect(tester.takeException(), isNull);
+      }
+
+      Widget app(WidgetBuilder builder) => RepaintBoundary(
+        key: boundary,
+        child: MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: buildBusyMarkTheme(
+            brightness: brightness,
+            accentColor: const Color(0xffe95420),
+          ),
+          home: Scaffold(body: Builder(builder: builder)),
+        ),
+      );
+      await tester.pumpWidget(
+        app(
+          (context) => Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Grouped entries, selectors and action rows',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                BusyMarkGroupedList(
+                  title: 'Connection',
+                  filled: true,
+                  children: [
+                    BusyMarkGroupedTextEntry(controller: host, label: 'Host'),
+                    BusyMarkComboRow<String>(
+                      title: 'Driver',
+                      values: const ['postgres', 'mysql'],
+                      selected: 'postgres',
+                      labelFor: (v) => v == 'postgres' ? 'PostgreSQL' : 'MySQL',
+                      onSelected: (_) {},
+                    ),
+                    BusyMarkSwitchRow(
+                      title: 'Read-only policy',
+                      value: true,
+                      onChanged: (_) {},
+                    ),
+                    BusyMarkActionRow(
+                      title: 'New connection',
+                      subtitle: 'Configure a database connection',
+                      leading: const Icon(YaruIcons.server),
+                      onTap: () {},
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Normal · hover · pressed · keyboard focus · disabled',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                for (final states in <Set<WidgetState>>[
+                  {},
+                  {WidgetState.hovered},
+                  {WidgetState.pressed},
+                  {WidgetState.focused},
+                  {WidgetState.disabled},
+                ])
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        for (var role = 0; role < 3; role++)
+                          button(context, role, states),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 20),
+                Text(
+                  'Sidebar selection and tree geometry',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                for (final selected in [false, true])
+                  BusyMarkSidebarTreeRow(
+                    title: 'Orders',
+                    depth: 1,
+                    hasChildren: true,
+                    expanded: true,
+                    selected: selected,
+                    icon: YaruIcons.folder,
+                    onTap: () {},
+                    onToggle: () {},
+                  ),
+                const SizedBox(height: 20),
+                Text(
+                  'Document tabs',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                Container(
+                  height: BusyMarkSizes.paneHeaderHeight,
+                  decoration: BoxDecoration(
+                    color: BusyMarkSurfaceColors.of(context).headerbarFlat,
+                    border: Border(bottom: BorderSide(color: BusyMarkSurfaceColors.of(context).subtleBorder)),
+                  ),
+                  padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
+                  child: Row(
+                    children: [
+                      for (final title in ['Orders.sql', 'Query.sql'])
+                        Padding(
+                          padding: const EdgeInsetsDirectional.only(end: 4),
+                          child: _WorkspaceTabButton(
+                            title: title,
+                            icon: YaruIcons.terminal,
+                            diff: false,
+                            active: title == 'Query.sql',
+                            dirty: false,
+                            onSelected: () {},
+                            onClose: () {},
+                            onSecondaryTapUp: (_) {},
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                BusyMarkPopupSelector<String>(
+                  value: 'postgres',
+                  label: 'PostgreSQL',
+                  tooltip: 'Driver',
+                  enabled: false,
+                  options: const [
+                    BusyMarkPopupSelectorOption(
+                      value: 'postgres',
+                      label: 'PostgreSQL',
+                    ),
+                  ],
+                  onSelected: (_) {},
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      for (final entry in stateOwners.entries) {
+        for (final state in entry.value) { entry.key.update(state, true); }
+      }
+      await capture('components');
+      final mouse = await tester.createGesture(kind: ui.PointerDeviceKind.mouse);
+      await mouse.addPointer();
+      final previousStrategy = FocusManager.instance.highlightStrategy;
+      final tab = find.byType(_WorkspaceTabButton).first;
+      await mouse.moveTo(tester.getCenter(tab));
+      await mouse.down(tester.getCenter(tab));
+      await mouse.up();
+      await mouse.moveTo(const Offset(1, 1));
+      await capture('tabs-pointer');
+      final tabFocus = Focus.of(tester.element(find.descendant(of: tab, matching: find.byType(Text)).first));
+      FocusManager.instance.highlightStrategy = FocusHighlightStrategy.alwaysTraditional;
+      tabFocus.requestFocus();
+      await capture('tabs-keyboard');
+      tabFocus.unfocus();
+
+      FocusManager.instance.highlightStrategy = FocusHighlightStrategy.alwaysTraditional;
+      for (final (role, target) in [
+        ('standard', find.widgetWithText(FilledButton, 'Test connection').first),
+        ('suggested', find.widgetWithText(ElevatedButton, 'Save & connect').first),
+        ('destructive', find.widgetWithText(ElevatedButton, 'Delete connection').first),
+      ]) {
+        final position = tester.getCenter(target);
+        await mouse.moveTo(position);
+        await capture('button-$role-hover');
+        await mouse.down(position);
+        await capture('button-$role-pressed');
+        await mouse.up();
+        await mouse.moveTo(const Offset(1,1));
+        final buttonFocus = Focus.of(tester.element(
+          find.descendant(of: target, matching: find.byType(Text)).first));
+        buttonFocus.requestFocus();
+        await capture('button-$role-focus');
+        buttonFocus.unfocus();
+      }
+      FocusManager.instance.highlightStrategy = previousStrategy;
+      await mouse.removePointer();
+
+      await tester.runAsync(() async {
+        await File('${directory.path}/${brightness.name}-metrics.txt').writeAsString(
+          '${tester.getSize(find.text('Test connection').first)}\n'
+          '${DefaultTextStyle.of(tester.element(find.text('Test connection').first)).style}\n'
+          '${Theme.of(tester.element(find.text('Test connection').first)).filledButtonTheme.style}\n',
+        );
+      });
+      await tester.pumpWidget(
+        app(
+          (context) => Center(
+            child: BusyMarkMenuButton<String>(
+              tooltip: 'Actions',
+              triggerBuilder: (context, trigger) => trigger.anchor(
+                child: Focus(
+                  focusNode: trigger.focusNode,
+                  child: BusyMarkHeaderIconButton(
+                    icon: YaruIcons.view_more,
+                    tooltip: 'Actions',
+                    onPressed: trigger.onPressed,
+                    selected: trigger.isOpen,
+                  ),
+                ),
+              ),
+              items: [
+                BusyMarkPopupMenuItem(
+                  value: 'copy',
+                  label: 'Copy',
+                  icon: YaruIcons.copy,
+                  shortcut: 'Ctrl+C',
+                ),
+                BusyMarkPopupMenuItem(
+                  value: 'selected',
+                  label: 'Selected value',
+                  trailingCheck: true,
+                  checked: true,
+                ),
+                BusyMarkPopupMenuItem(
+                  value: 'disabled',
+                  label: 'Unavailable action',
+                  enabled: false,
+                ),
+                const PopupMenuDivider(),
+                BusyMarkPopupMenuItem(value: 'more', label: 'More'),
+              ],
+              onSelected: (_) {},
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.byTooltip('Actions'));
+      await tester.pumpAndSettle();
+      for (final label in ['Copy', 'Selected value', 'Unavailable action', 'More']) {
+        expect(find.text(label).hitTestable(), findsOneWidget);
+      }
+      await capture('menu');
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+      await tester.pumpWidget(
+        app(
+          (context) => BusyMarkDialogShell(
+            title: 'Review connection',
+            children: const [
+              Text('The selected destination will be saved and connected.'),
+            ],
+            actions: [
+              BusyMarkPushButton.standard(
+                onPressed: () {},
+                child: const Text('Cancel'),
+              ),
+              BusyMarkPushButton.suggested(
+                onPressed: () {},
+                child: const Text('Save & connect'),
+              ),
+              BusyMarkPushButton.destructive(
+                context: context,
+                onPressed: () {},
+                child: const Text('Delete'),
+              ),
+            ],
+          ),
+        ),
+      );
+      expect(find.text('Review connection'), findsOneWidget);
+      await capture('dialog');
+      await tester.pumpWidget(const SizedBox.shrink());
+
+      debugDisableShadows = previousShadows;
+      debugDefaultTargetPlatformOverride = previousPlatform;
+      host.dispose();
+      for (final owner in stateOwners.keys) owner.dispose();
+      messenger.setMockMethodCallHandler(
+        const MethodChannel('yaru_window'),
+        null,
+      );
+      messenger.setMockMethodCallHandler(
+        const MethodChannel('yaru_window/events'),
+        null,
+      );
+    });
+  }
+}
+
+// @REFERENCE_TAB_PRESENTATION@

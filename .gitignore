@@ -1,0 +1,13 @@
+.dart_tool
+.flutter-plugins-dependencies
+build
+docs/acceptance
+backend/target
+backend/.mvn/cache
+*.snap
+*.msix
+__pycache__
+
+# Generated native directories may be aliases to owned external build storage.
+linux/flutter/ephemeral
+windows/flutter/ephemeral

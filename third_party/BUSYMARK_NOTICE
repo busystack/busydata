@@ -1,0 +1,23 @@
+BusyMark
+Copyright 2026 BusyStack
+
+This product includes presentation code developed by BusyStack for BusyMark,
+licensed under the Apache License, Version 2.0. See LICENSE in this repository.
+
+Source: /home/albert/busystack/busymark
+Reference revision: 8b9aa85 (full revision and file hashes in provenance.json).
+Follow-up interaction reference: 9c3acfa (read-only; hashes in provenance.json).
+
+Adapted components: Yaru role typography; checked switch/radio interaction;
+sidebar navigation; retained crossfades; header gap allocation and titlebar
+gestures; compact sidebar overlay; symbolic icon raster presentation; reduced
+motion window controls; tab leading-marker composition; autocomplete surface
+and rows; and editor text-menu interaction. Names, callbacks, application
+identity and database-specific adapters belong to BusyData.
+Supported-locale normalization and modal saving/cancellation behavior also follow
+the reference, retaining BusyData's own supported locales and durable writer.
+
+BusyData retains its own editor and document model, database operations, native
+menu retirement, modal/focus ownership and safe-close coordination. It has no
+runtime dependency on BusyMark. BusyMark's name and branding are not licensed
+here as BusyData branding.

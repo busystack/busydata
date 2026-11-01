@@ -1,0 +1,72 @@
+name: busydata
+title: BusyData
+version: '0.1.0'
+summary: PostgreSQL, MySQL and MariaDB desktop workbench
+description: |
+  BusyData is an independent desktop database workbench with a bundled Java backend.
+license: Apache-2.0
+base: core24
+grade: devel
+confinement: strict
+platforms:
+  amd64:
+    build-on: [amd64]
+    build-for: [amd64]
+apps:
+  busydata:
+    command: busydata
+    desktop: share/applications/io.busystack.busydata.desktop
+    common-id: io.busystack.busydata
+    extensions: [gnome]
+    slots: [busydata-dbus]
+    plugs: [desktop, desktop-legacy, gsettings, network, network-bind, opengl, wayland, x11, home, removable-media, ssh-keys]
+    environment:
+      GDK_BACKEND: wayland,x11
+      XDG_CACHE_HOME: $SNAP_USER_DATA/.cache
+      XDG_CONFIG_HOME: $SNAP_USER_DATA/.config
+      XDG_DATA_HOME: $SNAP_USER_DATA/.local/share
+slots:
+  busydata-dbus:
+    interface: dbus
+    bus: session
+    name: io.busystack.busydata
+parts:
+  busydata:
+    plugin: dump
+    after: [native-postgresql-client, native-mysql-client, native-mariadb-client]
+    source: build/linux/x64/release/bundle
+    stage-packages: [fonts-noto-core, libhandy-1-0, liblzma5, libsecret-1-0]
+    build-packages: [python3]
+    override-prime: |
+      # Snapcraft can retain an untracked optional file from the previous launcher.
+      # Reset only this BusyData-owned marker before copying the current payload.
+      rm -f "$CRAFT_PRIME/installed-acceptance-build.json"
+      craftctl default
+      python3 "$CRAFT_PROJECT_DIR/tool/verify_snap_payload.py" --source "$CRAFT_PROJECT_DIR/build/linux/x64/release/bundle" --prime "$CRAFT_PRIME" --output "$CRAFT_PRIME/backend/snap-payload-verified.json"
+      python3 "$CRAFT_PROJECT_DIR/tool/preserve_stage_notices.py" --stage "$CRAFT_STAGE" --prime "$CRAFT_PRIME"
+      python3 "$CRAFT_PROJECT_DIR/tool/verify_native_clients.py" --root "$CRAFT_PRIME" --output "$CRAFT_PRIME/backend/native-clients-verified.json"
+
+  native-postgresql-client:
+    plugin: nil
+    source: https://ftp.postgresql.org/pub/source/v17.11/postgresql-17.11.tar.bz2
+    source-checksum: sha256/dd27f2b3c59e73ed14aa3324901242bf69a032a6347805f274e6260322d42979
+    build-packages: [python3, perl, gcc, make, bison, flex, pkg-config, libssl-dev, zlib1g-dev]
+    stage-packages: [libssl3t64, zlib1g]
+    override-build: |
+      python3 "$CRAFT_PROJECT_DIR/tool/build_snap_native_clients.py" postgresql --source "$CRAFT_PART_SRC" --build "$CRAFT_PART_BUILD/clients" --install "$CRAFT_PART_INSTALL"
+  native-mysql-client:
+    plugin: nil
+    source: https://cdn.mysql.com/Downloads/MySQL-8.4/mysql-8.4.10.tar.gz
+    source-checksum: sha256/d57a6730baef14ae118f7f4a6e02845b5b50933758df61fb06e104f27ccc8f96
+    build-packages: [python3, perl, cmake, gcc, g++, make, bison, flex, pkg-config, libssl-dev, zlib1g-dev, libzstd-dev, libncurses-dev, liblz4-dev, libicu-dev, libtirpc-dev]
+    stage-packages: [libssl3t64, zlib1g, libzstd1, libncursesw6, libtinfo6, liblz4-1, libicu74, libtirpc3t64]
+    override-build: |
+      python3 "$CRAFT_PROJECT_DIR/tool/build_snap_native_clients.py" mysql --source "$CRAFT_PART_SRC" --build "$CRAFT_PART_BUILD/clients" --install "$CRAFT_PART_INSTALL"
+  native-mariadb-client:
+    plugin: nil
+    source: https://archive.mariadb.org/mariadb-11.8.9/source/mariadb-11.8.9.tar.gz
+    source-checksum: sha256/2e015b7e91004142eda8b3a20d3ceb875cf2ae55e72603e7222cd497d4e56fc6
+    build-packages: [python3, perl, cmake, gcc, g++, make, bison, flex, pkg-config, libssl-dev, zlib1g-dev, libzstd-dev, libncurses-dev]
+    stage-packages: [libssl3t64, zlib1g, libzstd1, libncursesw6, libtinfo6]
+    override-build: |
+      python3 "$CRAFT_PROJECT_DIR/tool/build_snap_native_clients.py" mariadb --source "$CRAFT_PART_SRC" --build "$CRAFT_PART_BUILD/clients" --install "$CRAFT_PART_INSTALL"

@@ -1,0 +1,183 @@
+name: BusyData full pre-release verification
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v[0-9]*']
+jobs:
+  database:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25.0.4.1+1'
+      - name: Pull required real-engine fixtures
+        run: |
+          docker pull postgres:17.11
+          docker pull mysql:8.4.10
+          docker pull mariadb:11.8.9
+      - name: Prepare the actual selected native clients and owned TLS transport
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build gcc
+          python3 tool/prepare_native_test_tools.py
+          cmake -S backend/native -B backend/target/native-build -DCMAKE_BUILD_TYPE=Release
+          cmake --build backend/target/native-build
+          ctest --test-dir backend/target/native-build --output-on-failure
+      - run: python3 tool/verify_pipeline.py --scope database
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-evidence
+          retention-days: 14
+          path: |
+            build/verification-evidence.json
+            build/verification/runs/
+            backend/target/*-reports/
+            backend/target/bom.*
+            backend/target/performance-postgres.json
+            backend/target/large-transfer-*.json
+            backend/target/native-backup-evidence/
+            backend/target/native-tools/fixture-tools.json
+  linux:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25.0.4.1+1'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.5'
+          channel: stable
+      - name: Verify the reference Flutter and bundled Dart versions
+        run: |
+          flutter_executable="$(readlink -f "$(command -v flutter)")"
+          dart_executable="$(dirname "$flutter_executable")/cache/dart-sdk/bin/dart"
+          python3 tool/check_toolchain.py
+          "$dart_executable" tool/verify_flutter_sdk.dart --flutter "$flutter_executable" --dart "$dart_executable" --toolchain config/toolchain.json
+      - run: sudo apt-get update && sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev libhandy-1-dev libsecret-1-dev liblzma-dev xvfb xdotool dbus-x11 python3-gi gir1.2-atspi-2.0 gir1.2-ibus-1.0 ibus ibus-table-cangjie3 orca speech-dispatcher speech-dispatcher-audio-plugins
+      - name: Run native release, performance and regression verification with current-run evidence
+        run: python3 tool/verify_pipeline.py --scope linux
+      - name: Build the isolated installed native acceptance bundle
+        run: python3 tool/build_snap_acceptance.py
+      - name: Preserve executable permissions in the release artifact
+        run: tar -C build/linux/x64/release -czf build/busydata-linux-x64.tar.gz bundle
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: linux-build
+          retention-days: 14
+          path: |
+            build/busydata-linux-x64.tar.gz
+            build/busydata-installed-acceptance.tar.gz
+            build/snap-acceptance-build.json
+            build/linux-release-build.json
+            build/*integration.log
+            build/performance-linux-ui.json
+            build/performance-linux-release.json
+            build/native-accessibility-linux.json
+            build/native-accessibility/
+            !build/native-accessibility/**/private-fixture/**
+            build/verification-evidence.json
+            build/verification/runs/
+            build/release-performance/**/inputs.json
+            build/release-performance/**/performance.json
+            build/release-performance/**/run-status.json
+          if-no-files-found: error
+  snap:
+    env:
+      SNAPCRAFT_BUILD_INFO: '1'
+    needs: [database, linux]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux-build
+          path: build
+      - run: mkdir -p build/linux/x64/release && tar -C build/linux/x64/release -xzf build/busydata-linux-x64.tar.gz
+      - name: Build the strict package
+        id: snapcraft
+        uses: snapcore/action-build@v1
+      - name: Inventory actual product package files and retained stage licenses
+        run: |
+          python3 -m venv build/snap-inventory-tools
+          build/snap-inventory-tools/bin/pip install -r tool/requirements-verification.txt
+          unsquashfs -d build/snap-product-files "${{ steps.snapcraft.outputs.snap }}"
+          build/snap-inventory-tools/bin/python tool/verify_snap_distribution.py --prime build/snap-product-files --output build/snap-distribution.json
+      - name: Preserve the ordinary product package and prepare separate test entrypoint
+        run: |
+          cp "${{ steps.snapcraft.outputs.snap }}" build/busydata-product.snap
+          python3 -c "from pathlib import Path; import shutil; shutil.rmtree(Path('build/linux/x64/release/bundle'))"
+          tar -C build/linux/x64/release -xzf build/busydata-installed-acceptance.tar.gz
+      - name: Refresh the application pull output after replacing the bundle
+        run: SNAPCRAFT_BUILD_ENVIRONMENT=lxd snapcraft clean busydata
+      - name: Build the separate strict acceptance package
+        id: acceptance-snap
+        uses: snapcore/action-build@v1
+      - name: Install only the disposable acceptance package on this runner
+        run: sudo snap install --dangerous "${{ steps.acceptance-snap.outputs.snap }}"
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25.0.4.1+1'
+      - name: Prepare real disposable fixtures and native portal facilities
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb xdotool dbus-x11 dbus-user-session gnome-keyring xdg-desktop-portal xdg-desktop-portal-gtk python3-gi gir1.2-atspi-2.0
+          sudo loginctl enable-linger "$(id -un)"
+          XDG_RUNTIME_DIR="/run/user/$(id -u)" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u)/bus" systemctl --user is-active default.target
+          backend/mvnw -f backend/pom.xml test-compile dependency:build-classpath -Dmdep.includeScope=test -Dmdep.outputFile=target/installed-fixture-classpath.txt
+      - name: Execute confined native database, file, TLS, key, agent, transfer and tool workflows
+        run: python3 tool/verify_installed_snap.py
+      - name: Require ordinary installed product acceptance on an approved runner
+        run: |
+          echo "::error::Ordinary product-Snap installed acceptance is unavailable on this runner. Run tool/verify_pipeline.py --scope desktop-full --installed-snap-vm <approved-owned-vm>; the disposable test-entrypoint results above do not accept the product Snap."
+          exit 1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: snap-evidence
+          retention-days: 14
+          path: |
+            *.snap
+            build/installed-snap.json
+            build/installed-snap/
+            build/busydata-product.snap
+            build/snap-distribution.json
+          if-no-files-found: error
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25.0.4.1+1'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.5'
+          channel: stable
+      - shell: pwsh
+        run: ./tool/windows/build_release.ps1
+      - name: Record unavailable MSIX installed acceptance
+        shell: pwsh
+        run: |
+          python tool/verification_evidence.py unavailable --stage msix --reason 'Approved native MSIX test identity, artwork, signing and installed acceptance are not configured on this runner; packaging/source tests do not accept an installed MSIX.'
+          if ($LASTEXITCODE -ne 0) { throw 'Could not record unavailable MSIX acceptance' }
+          python tool/record_verification.py --required windows-prerequisites configuration toolchain flutter-dependencies official-dependencies localizations java protocol format analyze boundaries flutter-tests runtime sources inventory lifecycle windows-release windows-native-build windows-native msix
+          if ($LASTEXITCODE -ne 0) { throw 'Full Windows/MSIX acceptance remains incomplete' }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-build
+          retention-days: 14
+          path: |
+            build/windows/x64/runner/Release/
+            build/verification-evidence.json
+            build/verification/runs/
+            backend/target/surefire-reports/
+            backend/target/bom.*

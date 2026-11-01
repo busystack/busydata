@@ -1,0 +1,253 @@
+syntax = "proto3";
+package busydata.v1;
+option java_package = "io.busystack.busydata.protocol";
+option java_multiple_files = true;
+// Strict per-release protocol identity. Older and newer peers are rejected;
+// there is no negotiation or compatibility path for discarded wire contracts.
+enum ProtocolVersion {
+ PROTOCOL_VERSION_UNSPECIFIED = 0;
+ BUSYDATA_PROTOCOL_VERSION = 15;
+}
+service Workbench {
+ rpc Ping(Context) returns (BackendInfo);
+ rpc Profiles(ProfileRequest) returns (ProfileList);
+ rpc TestConnection(OpenRequest) returns (ConnectionInfo);
+ rpc TestSshConnection(SshTestRequest) returns (SshTestReply);
+ rpc DescribeConnection(ProfileRequest) returns (ConnectionDescription);
+ rpc ReviewSshHost(SshTrustRequest) returns (SshTrustReply);
+ rpc AcceptSshHost(SshTrustRequest) returns (SshTrustReply);
+ rpc OpenSession(OpenRequest) returns (SessionInfo);
+ rpc Session(SessionRequest) returns (SessionInfo);
+ rpc ReviewSession(SessionRequest) returns (Approval);
+ rpc Review(ExecuteRequest) returns (Approval);
+ rpc Execute(ExecuteRequest) returns (JobInfo);
+ rpc ReviewBrowse(BrowseRequest) returns (Approval);
+ rpc Browse(BrowseRequest) returns (JobInfo);
+ rpc Jobs(JobRequest) returns (JobList);
+ rpc RetainedResults(RetainedRequest) returns (RetainedList);
+ rpc Cancel(JobRequest) returns (JobInfo);
+ rpc ResultPage(PageRequest) returns (Page);
+ rpc ResultValue(ValueRequest) returns (ValueChunk);
+ rpc CopySql(CopySqlRequest) returns (CopySqlReply);
+ rpc ResultAggregate(ResultAggregateRequest) returns (ResultAggregateReply);
+ rpc RelatedRows(RelatedRowsRequest) returns (RelatedRowsReply);
+ rpc CloneRow(CloneRowRequest) returns (StagedChange);
+ rpc DisposeResult(PageRequest) returns (Empty);
+ rpc CreateResultView(ResultViewRequest) returns (ResultViewInfo);
+ rpc DisposeResultView(ResultViewRequest) returns (Empty);
+ rpc CompleteSql(AnalysisRequest) returns (Analysis);
+ rpc DiagnoseSql(AnalysisRequest) returns (Analysis);
+ rpc SqlParameterInformation(AnalysisRequest) returns (Analysis);
+ rpc FormatSql(AnalysisRequest) returns (Analysis);
+ rpc ResolveSqlSymbol(AnalysisRequest) returns (Analysis);
+ rpc SqlDdlImpact(AnalysisRequest) returns (Analysis);
+ rpc Explore(ExploreRequest) returns (SchemaObjects);
+ rpc MetadataSettings(MetadataSettingsRequest) returns (MetadataSettingsReply);
+ rpc SchemaTool(SchemaToolRequest) returns (SchemaToolResult);
+ rpc PrivilegeTool(PrivilegeRequest) returns (PrivilegeReply);
+ rpc ReviewAuthentication(AuthenticationRequest) returns (Approval);
+ rpc Authentication(AuthenticationRequest) returns (JobInfo);
+ rpc PreviewChanges(ChangeRequest) returns (ChangePlan);
+ rpc AssessEditability(ChangeRequest) returns (Editability);
+ rpc ApplyChanges(ApplyRequest) returns (JobInfo);
+ rpc EditDraft(EditDraftRequest) returns (EditDraftReply);
+ rpc ReviewTool(ToolRequest) returns (Approval);
+ rpc Activities(ActivityRequest) returns (ActivityList);
+ rpc Capabilities(CapabilityRequest) returns (CapabilityList);
+ rpc PreviewImport(ToolRequest) returns (ImportPreview);
+ rpc Tool(ToolRequest) returns (JobInfo);
+ rpc History(HistoryRequest) returns (HistoryList);
+ rpc HistorySql(HistorySqlRequest) returns (HistorySqlChunk);
+ rpc Shutdown(Context) returns (Empty);
+ rpc RuntimeStats(Context) returns (RuntimeStatsReply);
+}
+// Aggregate private diagnostics only: no SQL, credentials, row payloads or paths.
+message RuntimeStatsReply { string instance_id=1; string java_version=2; uint64 heap_used_bytes=3; uint64 heap_committed_bytes=4; uint64 direct_buffer_bytes=5; uint64 mapped_buffer_bytes=6; uint64 retained_bytes=7; uint64 transfer_snapshot_bytes=8; uint32 physical_sessions=9; uint32 active_jobs=10; repeated string garbage_collectors=11; }
+message Empty {}
+message Context { string instance_id=1; string request_id=2; uint32 protocol_version=3; }
+message BackendInfo { string instance_id=1; uint32 protocol_version=2; string version=3; }
+enum Engine { ENGINE_UNSPECIFIED=0; POSTGRESQL=1; MYSQL=2; MARIADB=3; }
+enum Environment { DEVELOPMENT=0; STAGING=1; PRODUCTION=2; }
+// Old persisted values keep their meaning. DRIVER_DEFAULT deliberately leaves
+// negotiation to the bundled driver; it is distinct from explicitly disabled.
+enum TlsMode { VERIFY_FULL=0; INSECURE=1; DISABLED=2; VERIFY_CA=3; DRIVER_DEFAULT=4; }
+message Tls { TlsMode mode=1; string ca_file=2; string client_cert=3; string client_key=4; optional bool java_trust=5; optional bool system_trust=6; string key_credential_ref=7; optional TlsMode configured_mode=8; }
+message Ssh { bool enabled=1; string host=2; uint32 port=3; string user=4; string known_hosts=5; string private_key=6; bool agent=7; string agent_socket=8; string agent_key_fingerprint=9; string trust_ref=10; }
+// SSH authentication only. No database endpoint, credentials, TLS or JDBC session.
+// The backend applies its bounded SSH probe budget; profile_id scopes host trust.
+message SshTestRequest { Context context=1; string profile_id=2; Ssh ssh=3; string ssh_password=4; string key_passphrase=5; }
+message SshTestReply { string host=1; uint32 port=2; string user=3; string algorithm=4; string fingerprint=5; }
+message SshTrustRequest { Context context=1; Profile profile=2; string approval_token=3; string algorithm=4; string fingerprint=5; bool replace_changed_key=6; }
+message SshTrustReply { string host=1; uint32 port=2; string algorithm=3; string fingerprint=4; string previous_fingerprint=5; bool known=6; bool changed=7; string approval_token=8; string trust_ref=9; }
+message Profile { string id=1; string name=2; Engine engine=3; string host=4; uint32 port=5; string database=6; string user=7; Environment environment=8; bool read_only=9; uint32 connect_timeout_seconds=10; uint32 query_timeout_seconds=11; Tls tls=12; Ssh ssh=13; string credential_ref=14; map<string,string> options=15; }
+enum ProfileAction { LIST_PROFILES=0; SAVE_PROFILE=1; DELETE_PROFILE=2; }
+message ProfileRequest { Context context=1; ProfileAction action=2; Profile profile=3; }
+message ProfileList { repeated Profile profiles=1; }
+message OpenRequest { Context context=1; Profile profile=2; string password=3; string ssh_password=4; string key_passphrase=5; string catalog=6; string schema=7; string tls_key_password=8; }
+message ConnectionDescription { string jdbc_url=1; string initial_database=2; string driver_class=3; string driver_version=4; }
+message ConnectionInfo { string product=1; string version=2; reserved 3; string host=4; uint32 port=5; string database=6; string schema=7; string tls_cipher=8; bool tls_observed=9; }
+enum CapabilityState { CAPABILITY_UNKNOWN=0; CAPABILITY_AVAILABLE=1; CAPABILITY_LIMITED=2; CAPABILITY_DENIED=3; CAPABILITY_UNSUPPORTED=4; CAPABILITY_UNAVAILABLE=5; CAPABILITY_DISABLED=6; }
+message CapabilityRequest { Context context=1; string session_id=2; uint64 context_revision=3; uint64 session_revision=4; }
+// Availability is scoped to a fresh read probe or a documented engine feature,
+// never a grant or approval. Empty inspected data differs from denied access.
+message Capability { string id=1; string label=2; CapabilityState state=3; string detail=4; bool data_checked=5; bool empty=6; }
+message CapabilityList { string backend_instance=1; string session_id=2; uint64 context_revision=3; uint64 session_revision=4; string product=5; string version=6; uint32 major_version=7; uint32 minor_version=8; repeated Capability entries=9; string availability=10; }
+enum SessionAction { SESSION_STATUS=0; BEGIN=1; COMMIT=2; ROLLBACK=3; AUTO_COMMIT_ON=4; AUTO_COMMIT_OFF=5; DISCONNECT=6; ADOPT_SESSION=7; }
+enum TransactionState { IDLE=0; ACTIVE=1; FAILED_TRANSACTION=2; UNKNOWN_TRANSACTION=3; DISCONNECTED=4; }
+message SessionRequest { Context context=1; string session_id=2; SessionAction action=3; bool force=4; string approval_token=5; }
+message SessionInfo { string session_id=1; Profile profile=2; bool auto_commit=3; TransactionState transaction=4; ConnectionInfo database=5; uint64 context_revision=6; string current_catalog=7; string current_schema=8; repeated string search_path=9; string sql_mode=10; bool standard_conforming_strings=11; bool command_acknowledged=12; string command_warning=13; SessionAction acknowledged_action=14; uint64 session_revision=15; string metadata_source_identity=16; }
+enum ExecutionMode { SCRIPT=0; CURRENT_STATEMENT=1; SELECTION=2; }
+enum ErrorPolicy { STOP_ON_ERROR=0; CONTINUE_ON_ERROR=1; }
+message ExecuteRequest { Context context=1; string session_id=2; string execution_id=3; string sql=4; string document_id=5; uint64 document_version=6; ExecutionMode mode=7; uint32 caret_utf16=8; ErrorPolicy error_policy=9; uint64 row_limit=10; bool streaming_read=11; string approval_token=12; }
+enum ValuePredicate { EQUAL=0; NOT_EQUAL=1; LESS=2; GREATER=3; IS_NULL=4; IS_NOT_NULL=5; }
+message RowCondition { string column=1; ValuePredicate predicate=2; Value value=3; }
+message RowOrder { string column=1; bool descending=2; }
+// Only Java constructs the table query. Column identities are verified from metadata.
+message BrowseRequest { Context context=1; string session_id=2; string execution_id=3; string document_id=4; string catalog=5; string schema=6; string table=7; uint64 row_limit=8; repeated RowCondition conditions=9; repeated RowOrder order=10; string approval_token=11; uint64 metadata_snapshot_revision=12; string metadata_object_identity=13; string origin_relationship_identity=14; string origin_result_id=15; uint64 origin_source_row=16; }
+message Approval { string token=1; repeated string statements=2; repeated string risks=3; uint64 expires_unix_ms=4; }
+enum JobState { QUEUED=0; EXECUTING=1; FETCHING=2; CANCELLING=3; COMPLETED=4; FAILED=5; CANCELLED=6; INTERRUPTED=7; UNKNOWN_OUTCOME=8; }
+message JobRequest { Context context=1; string job_id=2; string session_id=3; uint32 offset=4; uint32 limit=5; uint64 catalog_revision=6; }
+message JobList { repeated JobInfo jobs=1; uint32 next_offset=2; bool complete=3; uint64 catalog_revision=4; }
+message RetainedRequest { Context context=1; uint32 offset=2; uint32 limit=3; uint64 catalog_revision=4; }
+// SQL provenance uses the same bounded preview/private value spool as cells.
+// It is never written to history or portable workspace presentation state.
+message RetainedResult { StatementResult result=1; string job_id=2; string execution_id=3; string document_id=4; string session_id=5; uint64 created_unix_ms=6; bool disposal_pending=7; uint32 leases=8; string availability=9; JobState state=10; Profile target=11; Value sql_provenance=12; string source_schema=13; }
+message RetainedList { repeated RetainedResult results=1; uint32 next_offset=2; bool complete=3; uint64 catalog_revision=4; }
+// target is the captured execution endpoint, stripped of credential/file bindings.
+// source_schema is execution context, separate from column base-table provenance.
+message JobInfo { string job_id=1; string session_id=2; string execution_id=3; JobState state=4; repeated StatementResult results=5; repeated string messages=6; uint64 duration_ms=7; string error_code=8; uint64 progress_rows=9; uint64 committed_rows=10; uint64 rejected_rows=11; Profile target=12; optional ToolKind tool_kind=13; string source_schema=14; }
+message StatementResult { uint32 statement_index=1; string result_id=2; repeated Column columns=3; sint64 update_count=4; uint64 fetched_rows=5; bool complete=6; bool limited=7; bool plan=8; }
+// name is a display label. ordinal is one-based; only verified base identity is
+// usable for editing. Unknown provenance never falls back to the display label.
+message Column { string name=1; string type_name=2; int32 jdbc_type=3; uint32 precision=4; sint32 scale=5; bool nullable=6; bool signed=7; string catalog=8; string schema=9; string table=10; bool read_only=11; string base_column=12; uint32 ordinal=13; bool provenance_known=14; string metadata_identity=15; uint64 metadata_snapshot_revision=16; }
+message Null {}
+message Temporal { string iso=1; string kind=2; string zone=3; }
+message EngineValue { string type_name=1; string text=2; }
+message ArrayValue { repeated Value values=1; string native_literal=2; string element_native_type=3; bytes native_binary=4; }
+message Value { oneof data { Null null_value=1; bool boolean=2; string signed_integer=3; string unsigned_integer=4; string decimal=5; string text=6; bytes binary=7; Temporal temporal=8; string json=9; ArrayValue array=10; EngineValue engine_value=11; double real=12; } bool truncated=20; uint64 original_bytes=21; string value_id=22; }
+message ValueRequest { Context context=1; string result_id=2; string value_id=3; uint64 offset=4; uint32 max_bytes=5; }
+message ValueChunk { bytes data=1; uint64 total_bytes=2; bool complete=3; }
+message Row { repeated Value values=1; }
+message PageRequest { Context context=1; string result_id=2; uint64 offset=3; uint32 limit=4; uint32 max_bytes=5; }
+message CopySqlRequest { Context context=1; string result_id=2; uint64 first_row=3; uint32 row_count=4; uint32 first_column=5; uint32 column_count=6; }
+message CopySqlReply { string text=1; }
+enum PageState { PAGE_DATA=0; PAGE_BYTE_LIMIT=1; PAGE_WAITING=2; PAGE_END=3; PAGE_METADATA_TOO_LARGE=4; PAGE_ROW_TOO_LARGE=5; PAGE_DISPOSED=6; PAGE_FAILED=7; }
+message Page { repeated Column columns=1; repeated Row rows=2; uint64 fetched_rows=3; bool complete=4; bool limited=5; uint64 first_offset=6; uint64 next_offset=7; PageState state=8; string availability=9; repeated uint64 source_rows=10; }
+message ResultViewRequest { Context context=1; string result_id=2; string view_id=3; repeated RowCondition conditions=4; repeated RowOrder order=5; }
+message ResultViewInfo { string view_id=1; string result_id=2; uint64 source_rows=3; uint64 visible_rows=4; bool partial=5; string availability=6; }
+enum AnalysisOperation { COMPLETION=0; DIAGNOSTICS=1; PARAMETER_INFORMATION=2; FORMAT=3; SYMBOL_RESOLUTION=4; DDL_IMPACT=5; }
+message InspectionSetting { string code=1; bool enabled=2; string severity=3; }
+message FormatSettings { string keyword_case=1; uint32 indentation_width=2; uint32 continuation_indent=3; bool clause_line_breaks=4; string join_layout=5; string comma_placement=6; string logical_operator_placement=7; bool wrap_lists=8; bool wrap_arguments=9; bool indent_subqueries=10; bool cte_line_breaks=11; bool parenthesis_spacing=12; bool operator_spacing=13; bool alignment=14; uint32 max_line_length=15; bool preserve_blank_lines=16; uint32 start_utf16=17; uint32 end_utf16=18; }
+message AnalysisRequest { Context context=1; string document_id=2; uint64 document_version=3; string sql=4; uint32 caret_utf16=5; string session_id=6; Engine engine=7; uint64 context_revision=8; uint64 session_revision=9; reserved 10; AnalysisOperation operation=11; uint64 metadata_snapshot_revision=12; uint64 metadata_configuration_revision=13; FormatSettings format_settings=14; repeated InspectionSetting inspections=15; bool format_current_statement=16; map<string,string> snippets=17; }
+message Span { uint32 start_utf16=1; uint32 end_utf16=2; string text=3; bool supported=4; }
+message Diagnostic { uint32 start_utf16=1; uint32 end_utf16=2; string message=3; string severity=4; string code=5; string source=6; bool incomplete=7; repeated Span related=8; repeated QuickFix fixes=9; Engine engine=10; }
+message QuickFix { string label=1; uint32 start_utf16=2; uint32 end_utf16=3; string replacement=4; }
+message Completion { string label=1; string insert_text=2; string kind=3; uint32 start_utf16=4; uint32 end_utf16=5; string detail=6; string target_identity=7; sint32 rank=8; bool qualification_required=9; bool quoted=10; string documentation=11; repeated string commit_characters=12; }
+// Token-preserving formatting maps full-document UTF-16 positions, including
+// literal/comment whitespace. Gaps map to the next token without changing SQL.
+message FormatToken { uint32 source_start_utf16=1; uint32 source_end_utf16=2; uint32 formatted_start_utf16=3; }
+message ResolvedSymbol { Span span=1; repeated SchemaObject candidates=2; bool complete=3; string availability=4; string catalog=5; string schema=6; string profile_id=7; }
+message Analysis { string document_id=1; uint64 document_version=2; repeated Span statements=3; repeated Diagnostic diagnostics=4; repeated Completion completions=5; string formatted_sql=6; string backend_instance=7; string session_id=8; uint64 context_revision=9; uint32 caret_utf16=10; uint64 session_revision=11; repeated FormatToken format_tokens=12; ResolvedSymbol symbol=13; AnalysisOperation operation=14; uint64 metadata_snapshot_revision=15; uint64 metadata_configuration_revision=16; ParameterInformation parameter_information=17; repeated DdlEffect ddl_effects=18; string availability=19; bool completion_limited=20; string metadata_source_identity=21; }
+message RoutineParameter { string name=1; string mode=2; string native_type=3; bool optional=4; bool variadic=5; string default_expression=6; }
+message RoutineSignature { string identity=1; string name=2; string signature=3; repeated RoutineParameter parameters=4; string return_type=5; }
+message ParameterInformation { uint32 start_utf16=1; uint32 end_utf16=2; uint32 active_argument=3; repeated RoutineSignature overloads=4; string availability=5; }
+message DdlEffect { string operation=1; string catalog=2; string schema=3; string name=4; ObjectKind kind=5; bool temporary=6; bool conservative=7; }
+enum ObjectKind { CATALOG=0; SCHEMA=1; TABLE=2; VIEW=3; COLUMN=4; INDEX=5; CONSTRAINT=6; ROUTINE=7; TRIGGER=8; FOREIGN_KEY=9; SEQUENCE=10; TYPE=11; }
+enum ObjectSubtype { OBJECT_SUBTYPE_UNSPECIFIED=0; ORDINARY_TABLE=1; PARTITIONED_TABLE=2; FOREIGN_TABLE=3; REGULAR_VIEW=4; MATERIALIZED_VIEW=5; NATIVE_SEQUENCE=6; FUNCTION=7; PROCEDURE=8; }
+enum MetadataCount { COUNT_UNAVAILABLE=0; AUTHORITATIVE_TOTAL=1; COMPLETE_ENUMERATION=2; PARTIAL_ENUMERATION=3; }
+message ExploreRequest { Context context=1; string session_id=2; ObjectKind kind=3; string catalog=4; string schema=5; string table=6; string search=7; bool refresh=8; bool global_search=9; string continuation=10; uint32 limit=11; optional uint64 expected_session_revision=12; optional uint64 expected_context_revision=13; bool exact_name=14; string identifier=15; ObjectSubtype subtype=16; bool independent_metadata=17; uint32 introspection_level=18; string refresh_mode=19; }
+// identifier is the exact native snapshot/dependency identity for routines.
+// A display name cannot distinguish overloads. Maximum UTF-8 size: 8KiB.
+message SchemaObject { string name=1; ObjectKind kind=2; string catalog=3; string schema=4; string table=5; string definition=6; map<string,string> properties=7; string identifier=8; ObjectSubtype subtype=9; string stable_identity=10; string quoted_identifier=11; string normalized_identifier=12; string parent_identity=13; uint64 metadata_snapshot_revision=14; uint32 introspection_level=15; string metadata_state=16; string source_revision=17; }
+// Ordinary tree counts describe the full requested name/kind scope, independent
+// of its returned page. Missing totals are never implicitly zero. Continuations
+// are opaque, backend-owned and bound to owner, revision and exact scope.
+message SchemaObjects { repeated SchemaObject objects=1; string availability=2; string continuation=3; bool complete=4; uint64 context_revision=5; uint64 session_revision=6; string profile_id=7; string session_id=8; string instance_id=9; string catalog=10; string schema=11; string parent=12; ObjectKind kind=13; MetadataCount count_availability=14; optional uint64 total_count=15; string default_namespace=16; ObjectSubtype subtype=17; uint64 metadata_snapshot_revision=18; uint64 metadata_configuration_revision=19; uint32 introspection_level=20; string metadata_state=21; string metadata_source_identity=22; }
+enum SchemaToolAction { CAPTURE_SCHEMA=0; COMPARE_SCHEMA=1; INSPECT_OBJECT=2; DESIGN_COLUMN=3; OBJECT_DEFINITION=4; }
+message SchemaToolRequest { Context context=1; string session_id=2; SchemaToolAction action=3; string schema=4; string table=5; string source_snapshot=6; string target_snapshot=7; string column=8; string type=9; bool nullable=10; string operation=11; string property=12; string value=13; string object_name=14; repeated string object_columns=15; bool unique=16; string reference_schema=17; string reference_table=18; repeated string reference_columns=19; string expression=20; string definition=21; string object_kind=22; repeated DesignedColumn designed_columns=23; string on_delete=24; string on_update=25; bool deferrable=26; bool initially_deferred=27; string catalog=28; ObjectKind kind=29; string identifier=30; }
+message DesignedColumn { string name=1; string type=2; bool nullable=3; string default_expression=4; string identity=5; string generated_expression=6; string comment=7; string collation=8; }
+// Differences describe the versioned snapshots. SQL remains one dependency-ordered
+// batch; individual differences do not authorize arbitrary statement subsets.
+message SchemaDifference { string kind=1; string name=2; string state=3; string before_definition=4; string after_definition=5; bool presentation_limited=6; }
+message SchemaToolResult { string snapshot=1; repeated string sql=2; repeated string risks=3; repeated string unsupported=4; string definition=5; bool complete=6; bool equivalent=7; repeated string dependencies=8; repeated SchemaDifference differences=9; bool differences_limited=10; SchemaObject inspected_object=11; string provenance=12; }
+enum PrivilegeAction { INSPECT_PRIVILEGES=0; DESIGN_PRIVILEGE=1; }
+// Credentials exist only in this private launch channel and executing task.
+// Reviews/history contain a redacted operation, never credential-bearing SQL.
+enum AuthenticationAction { CREATE_LOGIN=0; CREATE_ROLE=1; SET_PASSWORD=2; LOCK_LOGIN=3; UNLOCK_LOGIN=4; DROP_PRINCIPAL=5; }
+message AuthenticationRequest { Context context=1; string session_id=2; string execution_id=3; AuthenticationAction action=4; Principal principal=5; string password=6; string approval_token=7; }
+enum PrivilegeScope { TABLE_PRIVILEGE=0; SCHEMA_PRIVILEGE=1; DATABASE_PRIVILEGE=2; ROLE_MEMBERSHIP=3; DEFAULT_ROLE=4; }
+message Principal { string name=1; string host=2; string kind=3; }
+message PrivilegeRequest { Context context=1; string session_id=2; PrivilegeAction action=3; Principal grantee=4; PrivilegeScope scope=5; string schema=6; string table=7; repeated string privileges=8; bool revoke=9; bool delegation=10; Principal role=11; string search=12; }
+message PrivilegeReply { repeated Principal principals=1; string definition=2; repeated string sql=3; repeated string risks=4; bool limited=5; }
+enum ChangeKind { INSERT=0; UPDATE=1; DELETE=2; }
+// Values are addressed by the result's one-based ordinals. Original values and
+// row identity come exclusively from server-retained rows, never client labels.
+message DefaultValue {}
+// No assignment case means unset; explicit NULL and DEFAULT are not text values.
+message ValueAssignment { oneof assignment { Value value=1; Null null_value=2; DefaultValue default_value=3; } }
+message StagedChange { ChangeKind kind=1; reserved 2,3; uint64 source_row=4; map<uint32,ValueAssignment> values=5; }
+message ChangeRequest { Context context=1; string session_id=2; string catalog=3; string schema=4; string table=5; repeated StagedChange changes=6; string result_id=7; string recovery_id=8; }
+message ReviewedChange { ChangeKind kind=1; map<string,ValueAssignment> values=2; map<string,Value> original=3; uint64 source_row=4; }
+message ChangePlan { string plan_id=1; repeated string sql=2; repeated string risks=3; uint64 expires_unix_ms=4; repeated ReviewedChange changes=5; Profile target=6; }
+message Editability { bool editable=1; string reason=2; repeated uint32 editable_columns=3; string reason_code=4; }
+message ApplyRequest { Context context=1; string session_id=2; string execution_id=3; string plan_id=4; }
+enum ToolKind { EXPLAIN=0; EXPLAIN_ANALYZE=1; ACTIVITY=2; LOCKS=3; STATISTICS=4; ROLES=5; GRANTS=6; DEFINITION=7; SNAPSHOT=8; EXPORT_RESULT=9; IMPORT_CSV=10; IMPORT_JSON=11; DUMP=12; RESTORE=13; CANCEL_ACTIVITY=14; TERMINATE_ACTIVITY=15; EXPORT_QUERY=16; QUERY_STATISTICS=17; INDEX_DIAGNOSTICS=18; }
+enum ImportPolicy { ATOMIC_IMPORT=0; COMMIT_BATCHES=1; SKIP_INVALID_ROWS=2; }
+message ToolRequest { Context context=1; string session_id=2; string execution_id=3; ToolKind kind=4; string sql=5; string schema=6; string table=7; string path=8; string format=9; string result_id=10; string approval_token=11; bool overwrite=12; repeated string columns=13; string null_marker=14; string encoding=15; string native_tool_path=16; string value_id=17; uint64 target_id=18; map<string,string> column_mapping=19; string source_sha256=20; string delimiter=21; ImportPolicy import_policy=22; uint32 batch_rows=23; uint32 error_limit=24; uint64 output_limit_bytes=25; string activity_fingerprint=26; }
+message ActivityRequest { Context context=1; string session_id=2; }
+message Activity { uint64 id=1; string principal=2; string database=3; string state=4; string query_preview=5; string fingerprint=6; repeated uint64 blockers=7; string wait=8; bool cancellable=9; }
+message ActivityList { repeated Activity entries=1; bool limited=2; string availability=3; }
+message ImportPreview { repeated string source_columns=1; repeated Row rows=2; bool limited=3; string encoding=4; string null_marker=5; repeated string warnings=6; string source_sha256=7; }
+enum HistoryAction { SEARCH_HISTORY=0; CLEAR_HISTORY=1; SET_PRIVACY=2; DELETE_HISTORY_ENTRY=3; }
+message HistoryRequest { Context context=1; HistoryAction action=2; string search=3; bool retain_sql=4; uint32 retention_days=5; string entry_id=6; uint32 offset=7; uint32 limit=8; }
+message HistoryEntry { string id=1; string target=2; string sql=3; JobState state=4; uint64 duration_ms=5; uint64 started_unix_ms=6; bool sql_truncated=7; }
+message HistoryList { repeated HistoryEntry entries=1; bool retain_sql=2; uint32 retention_days=3; bool limited=4; uint32 next_offset=5; }
+message HistorySqlRequest { Context context=1; string entry_id=2; uint32 offset_utf16=3; uint32 max_units=4; }
+message HistorySqlChunk { string text=1; uint32 total_units=2; uint32 next_offset_utf16=3; bool complete=4; }
+// Local recovery records remain Java-owned. Rebinding never executes source SQL.
+enum EditDraftAction { LIST_EDIT_DRAFTS=0; SAVE_EDIT_DRAFT=1; REBIND_EDIT_DRAFT=2; DELETE_EDIT_DRAFT=3; }
+message EditDraftRequest { Context context=1; EditDraftAction action=2; string draft_id=3; string session_id=4; string document_id=5; ChangeRequest changes=6; }
+message EditDraftInfo { string draft_id=1; string document_id=2; Profile target=3; string schema=4; string table=5; uint32 changes=6; string state=7; uint64 created_unix_ms=8; }
+message EditDraftReply { repeated EditDraftInfo drafts=1; ChangeRequest changes=2; RetainedResult result=3; }
+// Stored by Java, never accepted from Flutter as proof of row identity.
+message EditDraftRow { uint64 source_row=1; Row row=2; }
+message StoredEditDraft { ChangeRequest changes=1; repeated Column columns=2; repeated EditDraftRow rows=3; string source_sql=4; Profile target=5; string schema_signature=6; string document_id=7; string source_sql_mode=8; optional bool standard_conforming_strings=9; optional string source_time_zone=10; optional string source_system_time_zone=11; }
+
+// Bounded exact calculations over an explicit retained result/view selection.
+message ResultAggregateRequest { Context context=1; string result_id=2; uint64 first_row=3; uint32 row_count=4; repeated uint32 ordinals=5; string view_id=6; }
+message ColumnAggregate { uint32 ordinal=1; uint64 selected_count=2; uint64 non_null_count=3; uint64 null_count=4; uint64 distinct_count=5; string sum=6; string average=7; Value minimum=8; Value maximum=9; string availability=10; }
+message ResultAggregateReply { string result_id=1; string view_id=2; string scope=3; bool partial=4; repeated ColumnAggregate columns=5; }
+message RelatedRowsRequest { Context context=1; string session_id=2; string result_id=3; uint64 source_row=4; uint64 snapshot_revision=5; string document_id=6; optional uint64 expected_session_revision=7; optional uint64 expected_context_revision=8; }
+message RelatedRelationship { string identity=1; string name=2; bool incoming=3; BrowseRequest browse=4; string availability=5; }
+message RelatedRowsReply { string result_id=1; uint64 source_row=2; uint64 snapshot_revision=3; repeated RelatedRelationship relationships=4; string availability=5; string backend_instance=6; string profile_id=7; string metadata_source_identity=8; string session_id=9; uint64 session_revision=10; uint64 context_revision=11; uint64 metadata_configuration_revision=12; }
+message CloneRowRequest { Context context=1; string session_id=2; string result_id=3; uint64 source_row=4; string catalog=5; string schema=6; string table=7; }
+
+enum MetadataSettingsAction { READ_METADATA_SETTINGS=0; SAVE_METADATA_SETTINGS=1; FULL_METADATA_REFRESH=2; INCREMENTAL_METADATA_REFRESH=3; }
+message MetadataScopeLevel { string catalog=1; string schema=2; uint32 level=3; }
+message MetadataIntrospectionConfiguration {
+ repeated string included_catalogs=1; repeated string excluded_catalogs=2;
+ repeated string included_schemas=3; repeated string excluded_schemas=4;
+ bool system_objects=5; repeated ObjectKind kinds=6;
+ repeated string include_patterns=7; repeated string exclude_patterns=8;
+ uint32 default_level=9; repeated MetadataScopeLevel scope_levels=10;
+}
+message MetadataSettingsRequest {
+ Context context=1; string session_id=2; uint64 session_revision=3; uint64 context_revision=4;
+ MetadataSettingsAction action=5; uint64 expected_configuration_revision=6;
+ MetadataIntrospectionConfiguration configuration=7; uint32 offset=8; uint32 limit=9;
+ uint64 expected_snapshot_revision=10;
+}
+message MetadataScopeStatus {
+ string catalog=1; string schema=2; string parent=3; ObjectKind kind=4;
+ uint32 level=5; string state=6; bool complete=7; uint64 last_successful_refresh_unix_ms=8;
+ string limitation=9; uint64 object_count=10;
+}
+message MetadataSettingsReply {
+ string backend_instance=1; string profile_id=2; string session_id=3;
+ uint64 session_revision=4; uint64 context_revision=5;
+ uint64 configuration_revision=6; uint64 snapshot_revision=7;
+ MetadataIntrospectionConfiguration configuration=8; repeated MetadataScopeStatus scopes=9;
+ uint32 next_offset=10; bool complete=11; string cache_state=12;
+ string refresh_strategy=13; uint64 scanned_scopes=14; uint64 fetched_scopes=15;
+ uint64 fetched_objects=16; uint64 refresh_duration_ms=17; string metadata_source_identity=18;
+}

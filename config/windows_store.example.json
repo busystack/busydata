@@ -1,0 +1,9 @@
+{
+  "production": true,
+  "identityName": "REPLACE_WITH_PARTNER_CENTER_IDENTITY_NAME",
+  "publisher": "CN=REPLACE_WITH_PARTNER_CENTER_PUBLISHER",
+  "publisherDisplayName": "REPLACE_WITH_PUBLISHER_DISPLAY_NAME",
+  "msixVersion": "1.0.0.0",
+  "previousMsixVersion": "",
+  "assetsDirectory": "REPLACE_WITH_APPROVED_ASSETS_DIRECTORY"
+}

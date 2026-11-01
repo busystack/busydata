@@ -1,0 +1,441 @@
+{
+  "reference_revision": "bf98600229d803f24ca5295e408379d1537aad08",
+  "files": [
+    [
+      "lib/src/app/busymax_yaru_theme.dart",
+      "lib/src/app/busydata_yaru_theme.dart"
+    ],
+    [
+      "lib/src/app/busymax_surface_colors.dart",
+      "lib/src/app/busydata_surface_colors.dart"
+    ],
+    [
+      "lib/src/app/busymax_design.dart",
+      "lib/src/app/busydata_design.dart"
+    ],
+    [
+      "lib/src/app/busymax_native_search_entry_theme.dart",
+      "lib/src/app/busydata_native_search_entry_theme.dart"
+    ],
+    [
+      "lib/src/app/busymax_dialogs.dart",
+      "lib/src/app/busydata_dialogs.dart"
+    ],
+    [
+      "lib/src/app/busymax_dialog_identity.dart",
+      "lib/src/app/busydata_dialog_identity.dart"
+    ],
+    [
+      "lib/src/app/busymax_window_close.dart",
+      "lib/src/app/busydata_window_close.dart"
+    ],
+    [
+      "lib/src/app/busymax_layout.dart",
+      "lib/src/app/busydata_layout.dart"
+    ],
+    [
+      "lib/src/app/busymax_glyphs.dart",
+      "lib/src/app/busydata_glyphs.dart"
+    ],
+    [
+      "lib/src/app/linux/linux_window_host.dart",
+      "lib/src/app/linux/linux_window_host.dart"
+    ],
+    [
+      "lib/src/app/linux/linux_page_frame.dart",
+      "lib/src/app/linux/linux_page_frame.dart"
+    ],
+    [
+      "lib/src/app/linux/linux_header_style.dart",
+      "lib/src/app/linux/linux_header_style.dart"
+    ],
+    [
+      "lib/src/platform/native_menu_service.dart",
+      "lib/src/platform/native_menu_service.dart"
+    ],
+    [
+      "lib/src/platform/native_style.dart",
+      "lib/src/platform/native_style.dart"
+    ],
+    [
+      "lib/src/platform/gtk_font_service.dart",
+      "lib/src/platform/gtk_font_service.dart"
+    ],
+    [
+      "lib/src/platform/gtk_header_icon_service.dart",
+      "lib/src/platform/gtk_header_icon_service.dart"
+    ],
+    [
+      "lib/src/platform/gtk_animation_settings_service.dart",
+      "lib/src/platform/gtk_animation_settings_service.dart"
+    ],
+    [
+      "lib/src/platform/gtk_window_preferences_service.dart",
+      "lib/src/platform/gtk_window_preferences_service.dart"
+    ],
+    [
+      "lib/src/platform/windows/windows_system_appearance_source.dart",
+      "lib/src/platform/windows/windows_system_appearance_source.dart"
+    ],
+    [
+      "lib/src/app/common/busymax_motion_widgets.dart",
+      "lib/src/app/common/busydata_motion_widgets.dart"
+    ],
+    [
+      "lib/src/app/common/busymax_design_values.dart",
+      "lib/src/app/common/busydata_design_values.dart"
+    ],
+    [
+      "tool/verify_flutter_sdk.dart",
+      "tool/verify_flutter_sdk.dart"
+    ],
+    [
+      "linux/CMakeLists.txt",
+      "linux/CMakeLists.txt"
+    ],
+    [
+      "linux/io.busystack.busymax.metainfo.xml",
+      "linux/io.busystack.busydata.metainfo.xml"
+    ],
+    [
+      "linux/io.busystack.busymax.desktop",
+      "linux/io.busystack.busydata.desktop"
+    ],
+    [
+      "linux/.gitignore",
+      "linux/.gitignore"
+    ],
+    [
+      "linux/flutter/CMakeLists.txt",
+      "linux/flutter/CMakeLists.txt"
+    ],
+    [
+      "linux/runner/gtk_search_entry_theme.h",
+      "linux/runner/gtk_search_entry_theme.h"
+    ],
+    [
+      "linux/runner/gtk_search_entry_theme.cc",
+      "linux/runner/gtk_search_entry_theme.cc"
+    ],
+    [
+      "linux/runner/my_application.h",
+      "linux/runner/my_application.h"
+    ],
+    [
+      "linux/runner/CMakeLists.txt",
+      "linux/runner/CMakeLists.txt"
+    ],
+    [
+      "linux/runner/gtk_header_icons.h",
+      "linux/runner/gtk_header_icons.h"
+    ],
+    [
+      "linux/runner/gtk_header_icons.cc",
+      "linux/runner/gtk_header_icons.cc"
+    ],
+    [
+      "linux/runner/my_application.cc",
+      "linux/runner/my_application.cc"
+    ],
+    [
+      "linux/runner/gtk_window_preferences.cc",
+      "linux/runner/gtk_window_preferences.cc"
+    ],
+    [
+      "linux/runner/gtk_window_preferences.h",
+      "linux/runner/gtk_window_preferences.h"
+    ],
+    [
+      "linux/runner/main.cc",
+      "linux/runner/main.cc"
+    ],
+    [
+      "windows/CMakeLists.txt",
+      "windows/CMakeLists.txt"
+    ],
+    [
+      "windows/.gitignore",
+      "windows/.gitignore"
+    ],
+    [
+      "windows/flutter/CMakeLists.txt",
+      "windows/flutter/CMakeLists.txt"
+    ],
+    [
+      "windows/runner/single_instance.cpp",
+      "windows/runner/single_instance.cpp"
+    ],
+    [
+      "windows/runner/Runner.rc",
+      "windows/runner/Runner.rc"
+    ],
+    [
+      "windows/runner/flutter_window.h",
+      "windows/runner/flutter_window.h"
+    ],
+    [
+      "windows/runner/flutter_window.cpp",
+      "windows/runner/flutter_window.cpp"
+    ],
+    [
+      "windows/runner/CMakeLists.txt",
+      "windows/runner/CMakeLists.txt"
+    ],
+    [
+      "windows/runner/win32_window.h",
+      "windows/runner/win32_window.h"
+    ],
+    [
+      "windows/runner/utils.cpp",
+      "windows/runner/utils.cpp"
+    ],
+    [
+      "windows/runner/win32_window.cpp",
+      "windows/runner/win32_window.cpp"
+    ],
+    [
+      "windows/runner/runner.exe.manifest",
+      "windows/runner/runner.exe.manifest"
+    ],
+    [
+      "windows/runner/short_time_pattern.h",
+      "windows/runner/short_time_pattern.h"
+    ],
+    [
+      "windows/runner/utils.h",
+      "windows/runner/utils.h"
+    ],
+    [
+      "windows/runner/main.cpp",
+      "windows/runner/main.cpp"
+    ],
+    [
+      "windows/runner/single_instance.h",
+      "windows/runner/single_instance.h"
+    ],
+    [
+      "windows/runner/resource.h",
+      "windows/runner/resource.h"
+    ],
+    [
+      "test/app/linux_page_frame_test.dart",
+      "test/app/linux_page_frame_test.dart"
+    ],
+    [
+      "test/app/linux_window_host_test.dart",
+      "test/app/linux_window_host_test.dart"
+    ],
+    [
+      "test/app/linux_header_style_test.dart",
+      "test/app/linux_header_style_test.dart"
+    ],
+    [
+      "test/app/busymax_button_style_test.dart",
+      "test/app/busydata_button_style_test.dart"
+    ],
+    [
+      "test/app/busymax_button_visual_test.dart",
+      "test/app/busydata_button_visual_test.dart"
+    ],
+    [
+      "test/app/busymax_menu_button_test.dart",
+      "test/app/busydata_menu_button_test.dart"
+    ],
+    [
+      "test/app/busymax_dialogs_test.dart",
+      "test/app/busydata_dialogs_test.dart"
+    ],
+    [
+      "test/app/busymax_window_close_test.dart",
+      "test/app/busydata_window_close_test.dart"
+    ],
+    [
+      "test/app/modal_barrier_test.dart",
+      "test/app/modal_barrier_test.dart"
+    ],
+    [
+      "test/app/high_contrast_theme_test.dart",
+      "test/app/high_contrast_theme_test.dart"
+    ],
+    [
+      "test/platform/native_menu_service_test.dart",
+      "test/platform/native_menu_service_test.dart"
+    ],
+    [
+      "test/platform/gtk_font_service_test.dart",
+      "test/platform/gtk_font_service_test.dart"
+    ],
+    [
+      "test/platform/gtk_header_icon_service_test.dart",
+      "test/platform/gtk_header_icon_service_test.dart"
+    ],
+    [
+      "test/platform/gtk_window_preferences_service_test.dart",
+      "test/platform/gtk_window_preferences_service_test.dart"
+    ],
+    [
+      "integration_test/gtk_header_icons_integration_test.dart",
+      "integration_test/gtk_header_icons_integration_test.dart"
+    ],
+    [
+      "test/app/native_ui_audit_test.dart",
+      "test/app/native_ui_audit_test.dart"
+    ],
+    [
+      "test/app/theme_localization_test.dart",
+      "test/app/theme_localization_test.dart"
+    ],
+    [
+      "integration_test/linux_window_close_acceptance_test.dart",
+      "integration_test/linux_window_close_acceptance_test.dart"
+    ],
+    [
+      "windows/runner/tests/single_instance_test.cpp",
+      "windows/runner/tests/single_instance_test.cpp"
+    ],
+    [
+      "tool/windows/common.ps1",
+      "tool/windows/common.ps1"
+    ],
+    [
+      "tool/windows/package_store.ps1",
+      "tool/windows/package_store.ps1"
+    ],
+    [
+      "tool/windows/AppxManifest.xml.template",
+      "tool/windows/AppxManifest.xml.template"
+    ],
+    [
+      "tool/windows/check_prerequisites.ps1",
+      "tool/windows/check_prerequisites.ps1"
+    ],
+    [
+      "test/platform/windows/windows_packaging_contract_test.dart",
+      "test/platform/windows/windows_packaging_contract_test.dart"
+    ],
+    [
+      "lib/src/l10n/app_locale.dart",
+      "lib/src/l10n/locale_resolution.dart"
+    ]
+  ],
+  "adaptations": [
+    "Database-specific product identities; no legacy compatibility aliases",
+    "Riverpod 3 bindings with command-owned execution",
+    "Excluded calendar roles, notification activations, timezone and tray dependencies",
+    "Portal encryption mechanism adapted to generic database secret records",
+    "Unchanged reviewed Linux button golden; Windows package checks adapted to owner-supplied artwork and identities",
+    "Windows packaging contract keeps owner identities, Win11 24H2 x64, and excludes calendar activation; Linux calendar-only header glyph roles removed."
+  ],
+  "presentation_reference": {
+    "project": "BusyMark",
+    "revision": "8b9aa8560c439a97126c6bbf5176a88b8542191a",
+    "license": "Apache-2.0",
+    "notice": "third_party/BUSYMARK_NOTICE",
+    "usage": "Local presentation adaptations; BusyData ownership, database operations, editor, menus and platform separation retained. No runtime dependency.",
+    "source_sha256": {
+      "lib/src/app/app_theme.dart": "7a678e640d235c8faf8f738bd6cf0545d52abc066525f4abda2d060538ba4001",
+      "lib/src/app/busymark_design.dart": "d271cd7599e481051800b9c3de16671a8271a278d54d28af784e2a77db307ba1",
+      "lib/src/app/busymark_motion_widgets.dart": "e2d85208058fdb7e14e276c078690ac54573f4b354cea2cdb7b9170efc69a4b9",
+      "lib/src/app/linux/linux_header_style.dart": "9a012cc52c72ad0c9c1fb3be5f04544ccfe3f313c443c993e16ee4aa14c9d1d1",
+      "lib/src/app/linux/linux_page_frame.dart": "42c23b31895de5a39226285641f8e55f53b853fbde99e938c4772f5046b9a24e",
+      "lib/src/app/linux/linux_window_host.dart": "53e2aa7dbe557c905359a12d7b01affda6151a3ac750d69becb8baf724806d43",
+      "lib/src/platform/gtk_header_icon_service.dart": "ec7742a4d6be403b0caff09c2a68d78f6e0093e50986c3fb284dfb69e4c3c660",
+      "lib/src/editor/editor_text_context_menu.dart": "26310176047f858a17fd4e746c303ac07460fba9d225e4bf0df10b88554ef393",
+      "lib/src/editor/source/source_editor.dart": "1b4e8993f271ef93575d353b9a9ca5e5b0d59fdcf3660a52e3a3c448b9ac97c5",
+      "lib/src/workspace/presentation/workspace_screen.dart": "f617a438069fc9f37f5ae89e8c7f41f6585a381fe04e27fd85a688989eab8cc5",
+      "lib/src/workspace/presentation/settings_screen.dart": "002e1c1d61874390cf796ad426fdfaeb8667f595c3608f7cf1b217fea02d00b6",
+      "lib/src/workspace/presentation/keyboard_shortcuts_settings.dart": "3279393acd15426c47a65f82820a0beb8466da1f1c5bfecfa3ee1080b817fc4a",
+      "lib/src/app/keyboard_shortcut_badge.dart": "36f49c029ad6d5611c66da8194eb63ef041d6ecca9e3e47156c35ab79c2eb1c1",
+      "lib/src/app/busymark_main_menu.dart": "b48362e06d8c50613b97ecfa8b8fb587949c3846ea8eda02cc25f478a6fd8904",
+      "lib/src/search/search_sidebar.dart": "b2ec6a7cc16c8bb49eb0825bea3dcefbc123a70634818c9941a01a9b3e74bce5"
+    },
+    "current_reference_checked": {
+      "revision": "3007fa160903a36fe997fab932f0c1d94b44955e",
+      "delta": "The later header-menu cancellation callback supplies its trigger context. BusyData retains its own captured trigger/session policy. No shared appearance delta.",
+      "working_tree_delta": "Independent document-history and editor ownership work was also inspected read-only. Shared shell, controls, text menu and autocomplete presentation remain equivalent; no document/editor/history engine was imported. Exact isolated rendering sources and status are recorded in the gallery source manifest."
+    },
+    "adaptations": {
+      "lib/src/app/busymark_design.dart": [
+        "lib/src/app/busydata_design.dart",
+        "lib/src/ui/linux/linux_controls.dart"
+      ],
+      "lib/src/workspace/presentation/settings_screen.dart": [
+        "lib/src/ui/common/workbench_settings.dart",
+        "lib/src/ui/linux/linux_controls.dart"
+      ],
+      "lib/src/search/search_sidebar.dart": [
+        "lib/src/ui/common/workbench_search.dart",
+        "lib/src/ui/common/workbench_search_session.dart"
+      ],
+      "lib/src/editor/editor_text_context_menu.dart": [
+        "lib/src/ui/common/workbench_editor_menu.dart"
+      ],
+      "lib/src/editor/source/source_editor.dart": [
+        "lib/src/ui/common/workbench_completion.dart",
+        "lib/src/ui/linux/linux_controls.dart"
+      ]
+    },
+    "followup_reference_checked": {
+      "revision": "9c3acfad9ad8c2ac3131066b7a1e2b83656c4f20",
+      "status": "",
+      "source_sha256": {
+        "lib/src/app/app_theme.dart": "7a678e640d235c8faf8f738bd6cf0545d52abc066525f4abda2d060538ba4001",
+        "lib/src/app/busymark_design.dart": "94beb8331df881391697400177abccb5711c8d41ae9a0dcdd6c1de0af2c4b8cf",
+        "lib/src/app/busymark_motion_widgets.dart": "e2d85208058fdb7e14e276c078690ac54573f4b354cea2cdb7b9170efc69a4b9",
+        "lib/src/app/linux/linux_header_style.dart": "9a012cc52c72ad0c9c1fb3be5f04544ccfe3f313c443c993e16ee4aa14c9d1d1",
+        "lib/src/app/linux/linux_page_frame.dart": "42c23b31895de5a39226285641f8e55f53b853fbde99e938c4772f5046b9a24e",
+        "lib/src/app/linux/linux_window_host.dart": "53e2aa7dbe557c905359a12d7b01affda6151a3ac750d69becb8baf724806d43",
+        "lib/src/platform/gtk_header_icon_service.dart": "ec7742a4d6be403b0caff09c2a68d78f6e0093e50986c3fb284dfb69e4c3c660",
+        "lib/src/editor/editor_text_context_menu.dart": "26310176047f858a17fd4e746c303ac07460fba9d225e4bf0df10b88554ef393",
+        "lib/src/editor/source/source_editor.dart": "6f61678317e86afb89d3511c5afd2481abd9063b5ca62640ec5d700d13b02aff",
+        "lib/src/workspace/presentation/workspace_screen.dart": "656c2ba9cf3163687f14e754a3f358f22c9f022d847b81bc8fac411dac141f71",
+        "lib/src/workspace/presentation/settings_screen.dart": "002e1c1d61874390cf796ad426fdfaeb8667f595c3608f7cf1b217fea02d00b6",
+        "lib/src/workspace/presentation/keyboard_shortcuts_settings.dart": "3279393acd15426c47a65f82820a0beb8466da1f1c5bfecfa3ee1080b817fc4a",
+        "lib/src/app/keyboard_shortcut_badge.dart": "36f49c029ad6d5611c66da8194eb63ef041d6ecca9e3e47156c35ab79c2eb1c1",
+        "lib/src/app/busymark_main_menu.dart": "b48362e06d8c50613b97ecfa8b8fb587949c3846ea8eda02cc25f478a6fd8904",
+        "lib/src/search/search_sidebar.dart": "b2ec6a7cc16c8bb49eb0825bea3dcefbc123a70634818c9941a01a9b3e74bce5",
+        "lib/src/app/app_locale.dart": "3cc22acde43a996e4a704ddc91309f9ad9114ee6331a9359a8175aa7a972063e"
+      },
+      "integration": "Saving/cancellation via existing modal scaffold; supported-locale normalization with BusyData locale policy; selection geometry and truthful menu hints through retained re_editor controllers. Reference source remained read-only."
+    },
+    "native_window_followup": {
+      "revision": "c269f6d345268373f70dae0e1ae889f92d117c7c",
+      "source_sha256": {
+        "lib/src/app/linux/linux_window_host.dart": "53e2aa7dbe557c905359a12d7b01affda6151a3ac750d69becb8baf724806d43",
+        "lib/src/platform/gtk_window_preferences_service.dart": "68dd0a6c9e0f1b6f52eab8e594fdee273a4b86f9f681e02d26bc89ddd4dfe938"
+      },
+      "integration": "Effective GTK dark preference synchronization and initial decoration allocation in the existing BusyData Linux window host. Database close coordinator, state stream and independent Windows presentation retained. Reference source remained read-only."
+    }
+  },
+  "test_fonts": {
+    "project": "DejaVu fonts",
+    "version": "2.37",
+    "source": "https://dejavu-fonts.github.io/",
+    "package": "Ubuntu fonts-dejavu-core 2.37-8build1",
+    "license": "test/fonts/LICENSE-DejaVu.txt",
+    "runtime_asset": false,
+    "files": {
+      "test/fonts/DejaVuSans.ttf": "b4c632e3cdf9acc7f28758fb5a323c8524d7fc6660d46904d9b6cbe2809c419c",
+      "test/fonts/DejaVuSansMono.ttf": "a54dca07c76d6289e717e75e0a58c0128f6d7269ef3faf76417c9d7d3bba37ab"
+    }
+  },
+  "official_dependency_policy": {
+    "runtime_sources": "Unmodified official Pub archives; no runtime source forks retained.",
+    "verification": "tool/verify_official_dependencies.py compares all published members and rejects injected files; dependency_inventory.py revalidates before packaging.",
+    "minimum_changes": {
+      "re_editor": {
+        "from": "0.8.0",
+        "to": "0.9.0",
+        "reason": "Official Flutter input-client compatibility fix; first-party editor state and public extension adapters own BusyData behavior.",
+        "primary_source": "https://pub.dev/packages/re_editor/changelog"
+      },
+      "http2": {
+        "from": "2.3.1",
+        "to": "3.1.0",
+        "reason": "Official canceled-stream response-header fix; existing unsolicited-stream protocol rejection remains required.",
+        "primary_source": "https://pub.dev/packages/http2/changelog"
+      }
+    },
+    "historical_record": "Earlier reference/port records describe their original integration context; Git history retains removed dependency modifications."
+  }
+}

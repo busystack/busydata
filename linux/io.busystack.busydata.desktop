@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=BusyData
+Comment=PostgreSQL, MySQL and MariaDB workbench
+Exec=busydata
+Terminal=false
+Categories=Development;Database;
+StartupWMClass=io.busystack.busydata

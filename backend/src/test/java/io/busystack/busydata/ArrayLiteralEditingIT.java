@@ -1,0 +1,39 @@
+package io.busystack.busydata;
+
+import io.busystack.busydata.protocol.*;
+import io.busystack.busydata.schema.*;
+import java.nio.file.Path;
+import java.util.*;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import static org.junit.jupiter.api.Assertions.*;
+
+/** Native literal validation is pure; only explicit reviewed Apply reaches JDBC. */
+class ArrayLiteralEditingIT {
+    @TempDir Path root;
+    private static ValueAssignment literal(String value){return Assignments.value(Value.newBuilder().setText(value).build());}
+    private static String quoted(String value){return "{\""+value.replace("\\","\\\\").replace("\"","\\\"")+"\"}";}
+    private static ChangeRequest source(EngineFixture fixture,io.busystack.busydata.sessions.SessionRegistry.Session session,String table)throws Exception {
+        var result=fixture.results.get(fixture.execute(session,"SELECT * FROM "+session.adapter.table(session.context.catalog(),fixture.schema(),table)+" ORDER BY id").info().getResults(0).getResultId());assertTrue(result.metadataProof().available(),result.metadataProof().availability());return ChangeRequest.newBuilder().setSessionId(session.id).setResultId(result.id).setCatalog(session.context.catalog()).setSchema(fixture.schema()).setTable(table).build();
+    }
+    @Test void nativeBuiltinArrayLiteralsKeepBoundsAndExactScalarsThroughReviewRecoveryAndApply()throws Exception {
+        try(var fixture=new EngineFixture(root,"POSTGRESQL")){
+            var session=fixture.open();fixture.execute(session,"CREATE TABLE array_literal_values(id INTEGER PRIMARY KEY,n INTEGER NOT NULL,a INTEGER[],exacts NUMERIC(38,12)[],words TEXT[],flags BOOLEAN[],tokens UUID[],stamp TIMESTAMP(6)[],zoned TIMESTAMPTZ(6)[],payloads JSONB[],bytes BYTEA[]); INSERT INTO array_literal_values VALUES(1,1,ARRAY[[1,2],[3,NULL]],ARRAY[1.23,NULL],ARRAY['original'],ARRAY[true,NULL,false],ARRAY['00000000-0000-0000-0000-000000000001'::uuid],ARRAY[TIMESTAMP '2024-01-01 12:00:00'],ARRAY[TIMESTAMPTZ '2024-01-01 12:00:00+00'],ARRAY['{\"a\":1}'::jsonb],ARRAY[decode('00ff','hex')])");fixture.warm(session,"array_literal_values");
+            var nativeColumn=fixture.metadata.metadataPlatform().capture(session).resolve(session.context.catalog(),fixture.schema(),ObjectKind.COLUMN,"array_literal_values","a",true).getFirst();assertEquals("23",nativeColumn.properties().get("arrayElementTypeId"));assertEquals(",",nativeColumn.properties().get("arrayElementDelimiter"));
+            var planner=new ChangePlanner(fixture.safety,fixture.results,fixture.metadata.metadataPlatform());String words="{\"a,b\",\"x'); DROP TABLE array_literal_values; --\",NULL,\"NULL\"}",exact="12345678901234567890.123456789012",bounds="[0:1][-1:0]={{10,NULL},{20,30}}";
+            var update=StagedChange.newBuilder().setKind(ChangeKind.UPDATE).putValues(3,literal(bounds)).putValues(4,literal("{"+exact+",NULL}")).putValues(5,literal(words)).putValues(6,literal("{t,NULL,off}")).putValues(7,literal("{00000000-0000-0000-0000-000000000002}")).putValues(8,literal(quoted("2024-02-03 12:00:00.123456"))).putValues(9,literal(quoted("2024-02-03 12:00:00.123456+05:30"))).putValues(10,literal(quoted("{\"amount\":1.230000000000000001}"))).putValues(11,literal(quoted("\\x0001ff"))).build();var request=source(fixture,session,"array_literal_values").toBuilder().addChanges(update).build();
+            var review=planner.preview(session,request);assertEquals(bounds,review.getChanges(0).getValuesOrThrow("a").getValue().getArray().getNativeLiteral());assertEquals(exact,review.getChanges(0).getValuesOrThrow("exacts").getValue().getArray().getValues(0).getDecimal());assertTrue(review.getChanges(0).getValuesOrThrow("words").getValue().getArray().getValues(2).hasNullValue());
+            var recovery=new EditDrafts(fixture.metadata,fixture.results,planner);String id=recovery.run(fixture.sessions,EditDraftRequest.newBuilder().setAction(EditDraftAction.SAVE_EDIT_DRAFT).setSessionId(session.id).setDocumentId("native-arrays").setChanges(request).build()).getDrafts(0).getDraftId();fixture.sessions.close(session.id,true);fixture.results.dispose(request.getResultId());var reopened=fixture.open();fixture.warm(reopened,"array_literal_values");var rebound=recovery.run(fixture.sessions,EditDraftRequest.newBuilder().setAction(EditDraftAction.REBIND_EDIT_DRAFT).setSessionId(reopened.id).setDocumentId("native-arrays-recovery").setDraftId(id).build());var approved=planner.preview(reopened,rebound.getChanges());var applied=planner.apply(reopened,ApplyRequest.newBuilder().setSessionId(reopened.id).setPlanId(approved.getPlanId()).setExecutionId(UUID.randomUUID().toString()).build(),fixture.jobs,fixture.metadata);EditingIT.await(applied);assertEquals(JobState.COMPLETED,applied.state,applied.info().toString());
+            String table=reopened.adapter.table(reopened.context.catalog(),fixture.schema(),"array_literal_values");try(var statement=reopened.connection.createStatement();var rows=statement.executeQuery("SELECT array_dims(a),a[0][-1],a[0][0] IS NULL,a[1][-1],exacts[1]::text,words[1],words[2],flags[1],flags[2] IS NULL,flags[3],tokens[1]::text,stamp[1]::text,zoned[1] AT TIME ZONE 'UTC',(payloads[1]->>'amount')::numeric,encode(bytes[1],'hex') FROM "+table)){
+                assertTrue(rows.next());assertEquals("[0:1][-1:0]",rows.getString(1));assertEquals(10,rows.getInt(2));assertTrue(rows.getBoolean(3));assertEquals(20,rows.getInt(4));assertEquals(exact,rows.getString(5));assertEquals("a,b",rows.getString(6));assertEquals("x'); DROP TABLE array_literal_values; --",rows.getString(7));assertTrue(rows.getBoolean(8));assertTrue(rows.getBoolean(9));assertFalse(rows.getBoolean(10));assertTrue(rows.getString(11).endsWith("0002"));assertEquals("2024-02-03 12:00:00.123456",rows.getString(12));assertEquals("2024-02-03 06:30:00.123456",rows.getString(13));assertEquals("1.230000000000000001",rows.getBigDecimal(14).toPlainString());assertEquals("0001ff",rows.getString(15));
+            }
+            var fresh=source(fixture,reopened,"array_literal_values");for(String invalid:List.of("{{1},{1,2}}","[0:2]={1,2}","{2147483648}","{1,}","{not_integer}")){var malformed=fresh.toBuilder().addChanges(StagedChange.newBuilder().setKind(ChangeKind.UPDATE).putValues(3,literal(invalid))).build();assertThrows(EditValues.Failure.class,()->planner.preview(reopened,malformed));}
+            var ordinary=fresh.toBuilder().addChanges(StagedChange.newBuilder().setKind(ChangeKind.UPDATE).putValues(2,Assignments.value(EditingIT.integer(2)))).build();EditingIT.apply(planner,fixture.jobs,reopened,ordinary);EditingIT.assertRows(reopened,"SELECT id,n FROM "+table,new int[][]{{1,2}});assertEquals("COMMITTED",fixture.metadata.editDraft(id).state());
+        }
+    }
+    @Test void maximumRectangularArrayRetainsAll1024ScalarItemsAndRejectedInputDoesNotMutate()throws Exception {
+        try(var fixture=new EngineFixture(root,"POSTGRESQL")){
+            var session=fixture.open();fixture.execute(session,"CREATE TABLE array_literal_limits(id INTEGER PRIMARY KEY,a INTEGER[]); INSERT INTO array_literal_limits VALUES(1,ARRAY[1])");fixture.warm(session,"array_literal_limits");var planner=new ChangePlanner(fixture.safety,fixture.results,fixture.metadata.metadataPlatform());String row="{"+String.join(",",Collections.nCopies(32,"1"))+"}",literal="{"+String.join(",",Collections.nCopies(32,row))+"}";var request=source(fixture,session,"array_literal_limits").toBuilder().addChanges(StagedChange.newBuilder().setKind(ChangeKind.UPDATE).putValues(2,literal(literal))).build();EditingIT.apply(planner,fixture.jobs,session,request);try(var statement=session.connection.createStatement();var rows=statement.executeQuery("SELECT cardinality(a),array_dims(a) FROM array_literal_limits")){assertTrue(rows.next());assertEquals(1024,rows.getInt(1));assertEquals("[1:32][1:32]",rows.getString(2));}
+        }
+    }
+}

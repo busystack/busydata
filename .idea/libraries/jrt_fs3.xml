@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="jrt-fs3">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/build/linux/x64/debug/bundle/backend/runtime/lib/jrt-fs.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
