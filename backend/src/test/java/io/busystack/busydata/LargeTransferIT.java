@@ -18,7 +18,9 @@ class LargeTransferIT {
     void directExportAndImmutableImportSucceedAboveTwoGiB(String engine)throws Exception{
         Path root=Files.createTempDirectory(Path.of("target").toAbsolutePath(),"large-transfer-");
         try{
-            try(var f=new EngineFixture(root,engine)){
+            assertTrue(Files.getFileStore(root).getUsableSpace()>=16L*1024*1024*1024,
+                "Large transfers require capacity for input, immutable snapshot and database on the same store");
+            try(var f=new EngineFixture(root,engine,LargeTransferStorage.prepare(root,Engine.valueOf(engine)))){
                 storageEvidence(root,f,"before");
                 assertTrue(Files.getFileStore(root).getUsableSpace()>=16L*1024*1024*1024,
                     "Large transfers require room for input, immutable snapshot, database/index/log and temporary copies; capacity receipt retained");
