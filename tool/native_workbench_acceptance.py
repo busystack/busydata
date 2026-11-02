@@ -1605,6 +1605,28 @@ def focused_native_action(Atspi, current_action, wait):
     return wait(focused_action)
 
 
+def activate_fluent_menu_keyboard(Atspi, current_action, caption, role, wait,
+                                  command, menus_retired):
+    """Focus once, reacquire its current menu proxy, then send one Return."""
+    def current_menu_action():
+        action = current_action()
+        if action is None:
+            return None
+        current, index, _ = action
+        if (current.get_name() != caption or current.get_role() != role or
+                not any(parent.get_role() == Atspi.Role.MENU
+                        for parent in accessible_ancestors(current))):
+            raise RuntimeError('Current Fluent menu destination changed')
+        return current, index
+
+    current, _ = focused_native_action(Atspi, current_menu_action, wait)
+    current.clear_cache()
+    if not current.get_state_set().contains(Atspi.StateType.FOCUSED):
+        raise RuntimeError('Current Fluent menu destination lost focus')
+    command(['xdotool', 'key', '--clearmodifiers', 'Return'])
+    wait(menus_retired)
+
+
 class _NativeControlVisibility:
     """One reveal dispatch, followed only by current visibility observations."""
     def __init__(self, Atspi):
@@ -2532,9 +2554,22 @@ def verify(Atspi, app, objects, wait, command, report, speech_contains, restart=
         report['nativeActionNames'] = names
         # Flutter supplies Tap; the preserved GTK menu path supplies its native
         # click/activate action. Focus is never a substitute for activation.
-        activated_role = dispatch_native_activation(Atspi, item, activation)
-        report['nativeLastAcknowledgedActivation'] = {'control': name,
-                                                     'action': names[activation]}
+        activated_role = item.get_role()
+        if (fluent and name not in APPLICATION_MENU_CATEGORIES and activated_role in
+                (Atspi.Role.MENU_ITEM, Atspi.Role.CHECK_MENU_ITEM, Atspi.Role.RADIO_MENU_ITEM)):
+            caption = item.get_name()
+            activate_fluent_menu_keyboard(Atspi, live_action, caption, activated_role,
+                wait, command, lambda: observed_none(lambda node:
+                    node.get_role() == Atspi.Role.MENU and
+                    node.get_state_set().contains(Atspi.StateType.SHOWING)))
+            report.setdefault('nativeFluentKeyboardMenuActivations', []).append(
+                {'control': name, 'caption': caption, 'input': 'one Return after current menu focus'})
+            report['nativeLastAcknowledgedActivation'] = {'control': name,
+                                                         'action': 'keyboard:Return'}
+        else:
+            activated_role = dispatch_native_activation(Atspi, item, activation)
+            report['nativeLastAcknowledgedActivation'] = {'control': name,
+                                                         'action': names[activation]}
         if modal is not None:
             wait_native_modal_retired(modal, lambda: objects(app), wait,
                 on_unavailable=lambda error: record_native_modal_read_unavailable(report, name, error))
