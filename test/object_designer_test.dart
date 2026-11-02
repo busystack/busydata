@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:busydata/src/app/busydata_yaru_theme.dart';
 import 'package:busydata/src/backend/generated/busydata.pb.dart' as rpc;
+import 'package:busydata/src/features/workspace/documents.dart'
+    show atomicWrite;
 import 'package:busydata/src/features/workspace/workbench_model.dart';
 import 'package:busydata/src/ui/common/desktop_controls.dart';
 import 'package:busydata/src/ui/common/object_designer.dart';
@@ -197,7 +199,22 @@ void main() {
             'routines': {},
           }),
         );
-        final model = WorkbenchModel(root)..draftRecovery = false;
+        ({File file, List<int> bytes})? recoveryWrite, presentationWrite;
+        final recoverySaved = Completer<void>();
+        final presentationSaved = Completer<void>();
+        final model = WorkbenchModel(
+          root,
+          recoveryWrite: (file, bytes) {
+            expect(recoveryWrite, isNull);
+            recoveryWrite = (file: file, bytes: List<int>.of(bytes));
+            return recoverySaved.future;
+          },
+          presentationWrite: (file, bytes) {
+            expect(presentationWrite, isNull);
+            presentationWrite = (file: file, bytes: List<int>.of(bytes));
+            return presentationSaved.future;
+          },
+        )..draftRecovery = false;
         model.newDocument(text: '-- keep this draft');
         model.backend = backend;
         model.document.sessionId = 'owned-session';
@@ -252,17 +269,22 @@ void main() {
           find.bySemanticsLabel(RegExp('^Close tab .*Object designer')),
         );
         await tester.pumpAndSettle();
-        for (
-          var attempt = 0;
-          attempt < 100 &&
-              model.taskDocuments.any((d) => d.purpose == 'design');
-          attempt++
-        ) {
-          await tester.runAsync(
-            () => Future<void>.delayed(const Duration(milliseconds: 20)),
-          );
-          await tester.pump();
-        }
+        // Run native output workers outside widget fake time and acknowledge
+        // each real save before expecting the designer to close.
+        expect(recoveryWrite, isNotNull);
+        expect(presentationWrite, isNull);
+        expect(find.byType(ObjectDesignerForm), findsOneWidget);
+        await tester.runAsync(
+          () => atomicWrite(recoveryWrite!.file, recoveryWrite!.bytes),
+        );
+        recoverySaved.complete();
+        await tester.pumpAndSettle();
+        expect(presentationWrite, isNotNull);
+        expect(find.byType(ObjectDesignerForm), findsOneWidget);
+        await tester.runAsync(
+          () => atomicWrite(presentationWrite!.file, presentationWrite!.bytes),
+        );
+        presentationSaved.complete();
         await tester.pumpAndSettle();
         expect(find.byType(ObjectDesignerForm), findsNothing);
         expect(model.pendingOperations, 0);
