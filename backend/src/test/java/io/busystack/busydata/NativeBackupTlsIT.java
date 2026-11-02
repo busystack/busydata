@@ -53,12 +53,13 @@ class NativeBackupTlsIT {
   var ca=identity("Fixture CA",null,true);var server=identity("localhost",ca,false);
   Path caFile=pem("ca.pem",ca.certificate),certificate=pem("server.pem",server.certificate),key=pem("server-key.pem",server.key.getPrivate());
   String image=postgres?"postgres:17.11":engine==Engine.MYSQL?"mysql:8.4.10":"mariadb:11.8.9";
-  try(var db=new GenericContainer<>(DockerImageName.parse(image)).withExposedPorts(port).withStartupTimeout(Duration.ofMinutes(3))
+  try(var db=new GenericContainer<>(DockerImageName.parse(image)).withExposedPorts(port)
     .withCopyFileToContainer(MountableFile.forHostPath(caFile,0644),"/tls/ca.pem").withCopyFileToContainer(MountableFile.forHostPath(certificate,0644),"/tls/server.pem").withCopyFileToContainer(MountableFile.forHostPath(key,0600),"/tls/server-key.pem");
     var ssh=SshServer.setUpDefaultServer()){
    db.withCreateContainerCmdModifier(command->command.withEntrypoint("bash","-c"));
    if(postgres)db.withEnv("POSTGRES_USER","busydata").withEnv("POSTGRES_PASSWORD","database-fixture").withEnv("POSTGRES_DB","busydata").withCommand(new String[]{"chown postgres:postgres /tls/server-key.pem; exec docker-entrypoint.sh postgres -c ssl=on -c ssl_cert_file=/tls/server.pem -c ssl_key_file=/tls/server-key.pem -c ssl_ca_file=/tls/ca.pem"}).waitingFor(Wait.forLogMessage(".*database system is ready to accept connections.*\\n",2));
    else db.withEnv(engine==Engine.MYSQL?"MYSQL_ROOT_PASSWORD":"MARIADB_ROOT_PASSWORD","database-fixture").withEnv(engine==Engine.MYSQL?"MYSQL_DATABASE":"MARIADB_DATABASE","busydata").withCommand(new String[]{"chown mysql:mysql /tls/server-key.pem; exec docker-entrypoint.sh "+(engine==Engine.MYSQL?"mysqld":"mariadbd")+" --ssl-ca=/tls/ca.pem --ssl-cert=/tls/server.pem --ssl-key=/tls/server-key.pem --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci"}).waitingFor(engine==Engine.MARIADB?Wait.forLogMessage(".*ready for connections.*\\n",2):Wait.forListeningPort());
+   db.withStartupTimeout(Duration.ofMinutes(3));
    db.start();var hostKey=identity("SSH fixture",null,true).key;
    ssh.setHost("127.0.0.1");ssh.setPort(0);ssh.setKeyPairProvider(context->List.of(hostKey));ssh.setPasswordAuthenticator((user,password,session)->user.equals("selected")&&password.equals("independent-ssh-fixture"));ssh.setForwardingFilter(AcceptAllForwardingFilter.INSTANCE);ssh.start();
    Path known=root.resolve("known_hosts");Files.writeString(known,"[127.0.0.1]:"+ssh.getPort()+" "+PublicKeyEntry.toString(hostKey.getPublic())+"\n");

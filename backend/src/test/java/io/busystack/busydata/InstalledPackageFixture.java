@@ -51,12 +51,13 @@ public final class InstalledPackageFixture {
             for(String engine:List.of("POSTGRESQL","MYSQL","MARIADB")) {
                 boolean postgres=engine.equals("POSTGRESQL");int port=postgres?5432:3306;
                 String image=postgres?"postgres:17.11":engine.equals("MYSQL")?"mysql:8.4.10":"mariadb:11.8.9";
-                var database=new GenericContainer<>(DockerImageName.parse(image)).withExposedPorts(port).withStartupTimeout(Duration.ofMinutes(3))
+                var database=new GenericContainer<>(DockerImageName.parse(image)).withExposedPorts(port)
                     .withCopyFileToContainer(MountableFile.forHostPath(caFile,0644),"/tls/ca.pem").withCopyFileToContainer(MountableFile.forHostPath(certificate,0644),"/tls/server.pem").withCopyFileToContainer(MountableFile.forHostPath(serverKey,0600),"/tls/server-key.pem")
                     .withCreateContainerCmdModifier(command->command.withEntrypoint("bash","-c"));
                 databases.add(database);
                 if(postgres)database.withEnv("POSTGRES_USER","busydata").withEnv("POSTGRES_PASSWORD","installed-database-fixture").withEnv("POSTGRES_DB","busydata").withCommand(new String[]{"chown postgres:postgres /tls/server-key.pem; exec docker-entrypoint.sh postgres -c ssl=on -c ssl_cert_file=/tls/server.pem -c ssl_key_file=/tls/server-key.pem -c ssl_ca_file=/tls/ca.pem"}).waitingFor(Wait.forLogMessage(".*database system is ready to accept connections.*\\n",2));
                 else database.withEnv(engine.equals("MYSQL")?"MYSQL_ROOT_PASSWORD":"MARIADB_ROOT_PASSWORD","installed-database-fixture").withEnv(engine.equals("MYSQL")?"MYSQL_DATABASE":"MARIADB_DATABASE","busydata").withCommand(new String[]{"chown mysql:mysql /tls/server-key.pem; exec docker-entrypoint.sh "+(engine.equals("MYSQL")?"mysqld":"mariadbd")+" --ssl-ca=/tls/ca.pem --ssl-cert=/tls/server.pem --ssl-key=/tls/server-key.pem --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci"}).waitingFor(engine.equals("MARIADB")?Wait.forLogMessage(".*ready for connections.*\\n",2):Wait.forListeningPort());
+                database.withStartupTimeout(Duration.ofMinutes(3));
                 database.start();engines.add(Map.of("engine",engine,"port",database.getMappedPort(port),"image",image,"imageId",database.getDockerClient().inspectImageCmd(image).exec().getId()));
             }
             System.out.println(new Gson().toJson(Map.of("version",1,"root",root.toString(),"engines",engines,"sshPort",ssh.getPort(),"selectedFingerprint",KeyUtils.getFingerPrint(selected.getPublic()))));System.out.flush();

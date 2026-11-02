@@ -30,9 +30,10 @@ final class EngineFixture implements AutoCloseable {
     EngineFixture(Path root,String name,SessionRegistry.ConnectionOpener opener,java.util.function.Consumer<GenericContainer<?>> configure,java.util.function.UnaryOperator<java.sql.Connection> metadataDecorator)throws Exception {
         engine=Engine.valueOf(name);int port=engine==Engine.POSTGRESQL?5432:3306;
         String image=switch(engine){case POSTGRESQL->"postgres:17.11";case MYSQL->"mysql:8.4.10";case MARIADB->"mariadb:11.8.9";default->throw new AssertionError();};
-        database=new GenericContainer<>(DockerImageName.parse(image)).withExposedPorts(port).withStartupTimeout(Duration.ofMinutes(3));
+        database=new GenericContainer<>(DockerImageName.parse(image)).withExposedPorts(port);
         if(engine==Engine.POSTGRESQL)database.withEnv("POSTGRES_PASSWORD","fixture").withEnv("POSTGRES_USER","busydata").withEnv("POSTGRES_DB","busydata").waitingFor(Wait.forLogMessage(".*database system is ready to accept connections.*\\n",2));
         else database.withEnv(engine==Engine.MYSQL?"MYSQL_ROOT_PASSWORD":"MARIADB_ROOT_PASSWORD","fixture").withEnv(engine==Engine.MYSQL?"MYSQL_DATABASE":"MARIADB_DATABASE","busydata").withCommand("--character-set-server=utf8mb4","--collation-server=utf8mb4_unicode_ci").waitingFor(Wait.forListeningPort());
+        database.withStartupTimeout(Duration.ofMinutes(3));
         configure.accept(database);
         database.start();
         profile=Profile.newBuilder().setId("fault-fixture").setName("Disposable fixture").setEngine(engine).setHost(database.getHost()).setPort(database.getMappedPort(port)).setDatabase("busydata").setUser(engine==Engine.POSTGRESQL?"busydata":"root").setTls(Tls.newBuilder().setMode(engine==Engine.MYSQL?TlsMode.INSECURE:TlsMode.DISABLED)).setConnectTimeoutSeconds(10).setQueryTimeoutSeconds(30).build();

@@ -99,7 +99,7 @@ class DatabaseTlsIT {
         Path clientCert = pem("client.pem", client.certificate), clientKey = pem("client-key.pem", client.pair.getPrivate()), badCa = pem("unrelated.pem", identity("Other CA", null, true, false).certificate);
         int port = engine == Engine.POSTGRESQL ? 5432 : 3306;
         String image = engine == Engine.POSTGRESQL ? "postgres:17.11" : engine == Engine.MYSQL ? "mysql:8.4.10" : "mariadb:11.8.9";
-        try (var database = new GenericContainer<>(DockerImageName.parse(image)).withExposedPorts(port).withStartupTimeout(Duration.ofMinutes(3))
+        try (var database = new GenericContainer<>(DockerImageName.parse(image)).withExposedPorts(port)
                 .withCopyFileToContainer(MountableFile.forHostPath(caFile, 0644), "/tls/ca.pem")
                 .withCopyFileToContainer(MountableFile.forHostPath(serverCert, 0644), "/tls/server.pem")
                 .withCopyFileToContainer(MountableFile.forHostPath(serverKey, 0600), "/tls/server-key.pem")) {
@@ -111,6 +111,7 @@ class DatabaseTlsIT {
                 .withCreateContainerCmdModifier(cmd -> cmd.withEntrypoint("bash", "-c"))
                 .withCommand(new String[]{"chown mysql:mysql /tls/server-key.pem; exec docker-entrypoint.sh "+(engine==Engine.MARIADB?"mariadbd":"mysqld")+" --ssl-ca=/tls/ca.pem --ssl-cert=/tls/server.pem --ssl-key=/tls/server-key.pem"})
                 .waitingFor(engine == Engine.MARIADB ? Wait.forLogMessage(".*ready for connections.*\\n", 2) : Wait.forListeningPort());
+            database.withStartupTimeout(Duration.ofMinutes(3));
             try {database.start();}catch(Exception failure){Files.writeString(Path.of(System.getProperty("basedir")).resolve("target/tls-"+engine+".log"),database.getLogs());throw failure;}
             Profile profile = Profile.newBuilder().setId("tls").setName("Disposable TLS fixture").setEngine(engine).setHost("127.0.0.1").setPort(database.getMappedPort(port)).setDatabase("busydata").setUser(engine == Engine.POSTGRESQL ? "busydata" : "root").setConnectTimeoutSeconds(5).setTls(Tls.newBuilder().setMode(TlsMode.VERIFY_FULL).setCaFile(caFile.toString())).build();
             try(var scratch=new io.busystack.busydata.security.PrivateTemporaryFiles(root.resolve("tls-scratch"))) {
