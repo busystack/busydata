@@ -2,7 +2,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from verify_native_accessibility import native_reader_line_ready
+from verify_native_accessibility import native_reader_line_ready, native_request_current_line
 
 
 class NativeReaderLineTest(unittest.TestCase):
@@ -46,3 +46,24 @@ class NativeReaderLineTest(unittest.TestCase):
         self.log.write_bytes(b'x' * (4 * 1024 * 1024 + 1))
         with self.assertRaisesRegex(RuntimeError, 'diagnostic byte budget'):
             native_reader_line_ready(self.log, 0, '日')
+
+    def test_command_dispatch_fences_the_owned_log_before_new_reader_output(self):
+        self.log.write_text(self.entered + self.spoken, encoding='utf-8')
+        calls = []
+        def dispatch(arguments):
+            calls.append(arguments)
+        def wait_for_receipt(predicate):
+            self.assertEqual(calls, [['xdotool', 'key', '--clearmodifiers', 'KP_Up']])
+            self.assertFalse(predicate(), 'Earlier reader output cannot acknowledge this command')
+            with self.log.open('a', encoding='utf-8') as output:
+                output.write(self.entered + self.spoken)
+            self.assertTrue(predicate())
+        native_request_current_line(self.log, '日', dispatch, wait_for_receipt)
+        self.assertEqual(len(calls), 1)
+
+    def test_missing_owned_log_never_dispatches_keyboard_input(self):
+        calls = []
+        with self.assertRaises(FileNotFoundError):
+            native_request_current_line(self.log, '日', calls.append,
+                                       lambda predicate: self.fail('No reader wait is allowed'))
+        self.assertEqual(calls, [])

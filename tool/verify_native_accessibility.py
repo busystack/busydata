@@ -273,6 +273,13 @@ def native_reader_line_ready(path, after_bytes, text):
         tail[entered.start():], ["SPEECH OUTPUT: '" + text + "'"])
 
 
+def native_request_current_line(path, text, command, wait):
+    """Fence the owned reader log before dispatching a real flat-review command."""
+    after_bytes = path.stat().st_size
+    command(['xdotool', 'key', '--clearmodifiers', 'KP_Up'])
+    wait(lambda: native_reader_line_ready(path, after_bytes, text))
+
+
 def native_wait(predicate, context, reader_log, seconds=15):
     """Continuous native events must not starve acknowledgements or deadlines."""
     end = time.monotonic() + seconds
@@ -622,9 +629,8 @@ def owned(directory):
             report['nativeTextRangeBounds'] = glyph['range']
             # Require the requested flat-review command and its subsequent speech;
             # an earlier automatic IME utterance cannot acknowledge this command.
-            reader_line_start = reader_log.stat().st_size
-            command(['xdotool', 'key', '--clearmodifiers', 'KP_Up'])
-            wait(lambda: native_reader_line_ready(reader_log, reader_line_start, '日'))
+            native_request_current_line(directory / 'orca-debug.log', '日',
+                                        command, wait)
             report['nativeImeCurrentLineReadByOrcaVerified'] = True
             # Resume ordinary editor navigation. The printable keypad-minus
             # toggle can also reach the active IME and mutate this exact fixture.
