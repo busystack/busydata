@@ -71,7 +71,7 @@ def verify(source, ordinary_build, directory, base_environment):
             XDG_CACHE_HOME=str(runtime / 'cache'),
             BUSYDATA_NATIVE_ACCEPTANCE_EXECUTABLE=str(private / 'busydata'),
             BUSYDATA_NATIVE_COMPOSITION_OUTPUT=str(evidence / 'composition.json'))
-        argv = ['/usr/bin/xvfb-run', '-a', '-s', '-screen 0 1920x1080x24 -noreset',
+        argv = ['xvfb-run', '-a', '-s', '-screen 0 1920x1080x24 -noreset',
             '/usr/bin/dbus-run-session', '--', '/usr/bin/python3',
             str(ROOT / 'tool/verify_native_accessibility.py'), '--owned-session', str(evidence)]
         report['command'] = argv

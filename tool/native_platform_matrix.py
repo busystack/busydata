@@ -109,7 +109,7 @@ def verify(source, ordinary_build, directory, base_environment, *, case_name=Non
             record = {'name': expected['name'], 'exitCode': 1, 'cleanupConfirmed': False}
             try:
                 display = '3840x2160x24' if expected.get('devicePixelRatio') == 2 else '1920x1080x24'
-                argv = ['/usr/bin/xvfb-run', '-a', '-s', '-screen 0 ' + display + ' -noreset',
+                argv = ['xvfb-run', '-a', '-s', '-screen 0 ' + display + ' -noreset',
                     '/usr/bin/dbus-run-session', '--', '/usr/bin/python3',
                     str(ROOT / 'tool/verify_native_accessibility.py'), '--owned-session', str(case)]
                 record['command'] = argv

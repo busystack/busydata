@@ -1266,7 +1266,7 @@ def main():
             report['controllerTimeoutSeconds'] = controller_seconds
             report['buildId'] = build['buildId']
             report['artifactHashes'] = bundle_hashes
-            controller = subprocess.Popen(['/usr/bin/xvfb-run', '-a', '-s', '-screen 0 1920x1080x24 -noreset',
+            controller = subprocess.Popen(['xvfb-run', '-a', '-s', '-screen 0 1920x1080x24 -noreset',
                 '/usr/bin/dbus-run-session', '--', '/usr/bin/python3', str(Path(__file__).resolve()),
                 '--owned-session', str(directory)], env=environment, stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT, start_new_session=True)
