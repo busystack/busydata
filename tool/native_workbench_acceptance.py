@@ -2913,7 +2913,9 @@ def verify(Atspi, app, objects, wait, command, report, speech_contains, restart=
         raise RuntimeError('Native selector omitted its field or selected value')
     driver_caption = driver.get_name()
     report['nativeSelectedDriverName'] = driver_caption
-    focus(driver)
+    driver = focus_live_native_control(Atspi, lambda: find('Driver'), wait)
+    if driver.get_name() != driver_caption:
+        raise RuntimeError('Native selected driver changed during focus acquisition')
     wait(lambda: speech_contains([driver_caption]))
     report['nativeSelectedValueAndReaderVerified'] = True
     def supply_password(field):
