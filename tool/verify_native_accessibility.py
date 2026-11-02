@@ -40,6 +40,33 @@ def native_report_json(report):
     return serialized
 
 
+def stop_database_fixture(identifier, receipt, creation_attempted):
+    """Retain ownership when Docker creates a fixture before run times out."""
+    if not creation_attempted:
+        return False
+    recovered = False
+    if receipt.is_symlink():
+        raise RuntimeError('Owned database fixture identifier receipt is a link')
+    if receipt.exists():
+        if not receipt.is_file() or receipt.stat().st_size > 65:
+            raise RuntimeError('Invalid owned database fixture identifier receipt')
+        contents = receipt.read_bytes()
+        if re.fullmatch(rb'[0-9a-f]{64}\n?', contents) is None:
+            raise RuntimeError('Invalid owned database fixture identifier receipt')
+        recorded = contents.decode('ascii').rstrip('\n')
+        if identifier is not None and identifier != recorded:
+            raise RuntimeError('Owned database fixture identifiers disagree')
+        recovered = identifier is None
+        identifier = recorded
+    if identifier is None:
+        raise RuntimeError('Database fixture creation outcome is unavailable')
+    if re.fullmatch(r'[0-9a-f]{64}', identifier) is None:
+        raise RuntimeError('Invalid owned database fixture identity')
+    subprocess.run(['docker', 'stop', identifier], check=True,
+                   stdout=subprocess.DEVNULL, timeout=30)
+    return recovered
+
+
 def native_failure_structure(Atspi, nodes, catalog):
     """Bounded structural evidence; never retain accessible text or labels."""
     statuses = {'ok', 'limited', 'unavailable', 'none', 'pending', 'stale',
@@ -1048,6 +1075,8 @@ def main():
     report = {'version': 1, 'exitCode': 1, 'stage': 'controller-start',
               'sourceSha256': source, 'cleanupConfirmed': False}
     controller = log = fixture = ssh_fixture = ssh_log = None
+    fixture_receipt = directory / 'database-fixture.cid'
+    fixture_creation_attempted = False
     catalog_fixture = {'configuredPageTables': 2305, 'serverMemoryLimitBytes': 256 * 1024 * 1024} if args.database_explorer else None
     ordinary_mysql_cache_bytes = None
     ordinary_mysql_metadata_privilege = None
@@ -1162,7 +1191,9 @@ def main():
         # container that can die after readiness. This is disposable server
         # provisioning, separate from the unchanged measured application cap.
         fixture_memory_mib = 512 if args.ordinary_mysql else 256
+        fixture_creation_attempted = True
         fixture = subprocess.run(['docker', 'run', '--rm', '-d',
+            '--cidfile', str(fixture_receipt),
             '--memory=' + str(fixture_memory_mib) + 'm', '--cpus=1',
             '--label', 'io.busystack.busydata.acceptance=native-accessibility',
             *database_environment,
@@ -1434,9 +1465,8 @@ def main():
             if not report['fixtureCredentialAbsentFromDiagnostics']:
                 report['exitCode'] = 1
         try:
-            if fixture is not None:
-                subprocess.run(['docker', 'stop', fixture], check=True,
-                               stdout=subprocess.DEVNULL, timeout=30)
+            report['databaseFixtureIdentifierRecovered'] = stop_database_fixture(
+                fixture, fixture_receipt, fixture_creation_attempted)
             report['databaseFixtureCleanupConfirmed'] = True
         except Exception as cleanup:
             report['databaseFixtureCleanupConfirmed'] = False
