@@ -111,11 +111,11 @@ def build(platform, no_pub=False):
         if len(files) >= 20000:
             raise RuntimeError('Product bundle file-count budget exceeded')
         if path.is_symlink():
-            files.append({'path': str(path.relative_to(bundle)), 'linkTarget': path.readlink().as_posix()})
+            files.append({'path': path.relative_to(bundle).as_posix(), 'linkTarget': path.readlink().as_posix()})
         elif path.is_file():
             with path.open('rb') as stream:
                 digest = hashlib.file_digest(stream, 'sha256').hexdigest()
-            files.append({'path': str(path.relative_to(bundle)), 'sha256': digest,
+            files.append({'path': path.relative_to(bundle).as_posix(), 'sha256': digest,
                           'bytes': path.stat().st_size, 'mode': path.stat().st_mode & 0o777})
     sdk = subprocess.run(['flutter', '--version', '--machine'], check=True, capture_output=True, text=True)
     report = {'buildId': build_id, 'buildSourceSha256': source, 'entrypoint': entrypoint,
