@@ -190,7 +190,7 @@ def configure_reader_receipts(data_home):
         '        def writelines(self, lines):\n'
         '            message = "".join(lines)\n'
         '            prefix = message.split(" - ", 1)[-1]\n'
-        '            if not prefix.startswith(("SPEECH OUTPUT:", "ERROR:", "WARNING:")) and prefix.strip() != "ORCA: Starting Atspi main event loop":\n'
+        '            if not prefix.startswith(("SPEECH OUTPUT:", "ERROR:", "WARNING:", "FLAT REVIEW PRESENTER: Creating new context.")) and prefix.strip() != "ORCA: Starting Atspi main event loop":\n'
         '                return\n'
         '            self.stream.write(message)\n'
         '    debug.debugFile = _ReaderDiagnostics(debug.debugFile)\n')
@@ -253,6 +253,24 @@ def native_speech_contains(log, labels):
         events.append(' '.join(current.split()))
     return all(any(' '.join(label.split()) in event for event in events)
                for label in labels)
+
+
+def native_reader_line_ready(path, after_bytes, text):
+    """Require fresh flat-review entry followed by the requested real speech."""
+    if not path.is_file():
+        return False
+    with path.open('rb') as stream:
+        data = stream.read(4 * 1024 * 1024 + 1)
+    if len(data) > 4 * 1024 * 1024:
+        raise RuntimeError('Native reader diagnostic byte budget')
+    if not 0 <= after_bytes <= len(data):
+        return False
+    tail = data[after_bytes:].decode('utf-8', errors='replace')
+    entered = re.search(
+        r'^\d{2}:\d{2}:\d{2}\.\d+ - FLAT REVIEW PRESENTER: Creating new context\.',
+        tail, re.MULTILINE)
+    return entered is not None and native_speech_contains(
+        tail[entered.start():], ["SPEECH OUTPUT: '" + text + "'"])
 
 
 def native_wait(predicate, context, reader_log, seconds=15):
@@ -602,17 +620,17 @@ def owned(directory):
             glyph = native_character_geometry(Atspi, editor)
             report['nativeTextGlyphGeometry'] = glyph
             report['nativeTextRangeBounds'] = glyph['range']
-            # Orca 50's unmodified desktop bindings use KP_Up to read the current
-            # line (flat_review_presenter.py). Request the real reader output before
-            # further typing interrupts it; visible text is not a speech receipt.
+            # Require the requested flat-review command and its subsequent speech;
+            # an earlier automatic IME utterance cannot acknowledge this command.
+            reader_line_start = reader_log.stat().st_size
             command(['xdotool', 'key', '--clearmodifiers', 'KP_Up'])
-            wait(lambda: speech_contains(["SPEECH OUTPUT: '日"]))
+            wait(lambda: native_reader_line_ready(reader_log, reader_line_start, '日'))
             report['nativeImeCurrentLineReadByOrcaVerified'] = True
-            # Leave the reader's flat-review mode using its ordinary desktop
-            # binding before sending editor navigation/typing keys.
-            command(['xdotool', 'key', '--clearmodifiers', 'KP_Subtract'])
+            # Resume ordinary editor navigation. The printable keypad-minus
+            # toggle can also reach the active IME and mutate this exact fixture.
             report['stage'] = 'unicode-caret'
             command(['xdotool', 'key', '--clearmodifiers', 'Home'])
+            wait(lambda: text() == '日' and Atspi.Text.get_caret_offset(editor) == 0)
             paste_gtk_text('😀', lambda: text() == '😀日')
             wait(lambda: text() == '😀日')
             report['unicodeCharacterCount'] = Atspi.Text.get_character_count(editor)
