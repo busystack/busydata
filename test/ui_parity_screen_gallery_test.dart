@@ -79,6 +79,7 @@ void main() {
     ) async {
       final previousPlatform = debugDefaultTargetPlatformOverride;
       debugDefaultTargetPlatformOverride = TargetPlatform.linux;
+      addTearDown(() => debugDefaultTargetPlatformOverride = previousPlatform);
       installNativeWindowFixture(tester);
       tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
         SystemChannels.platform,
@@ -421,6 +422,18 @@ void main() {
       }
       final assignment = settings.assign('execute');
       await capture('shortcut-editor');
+      // Finish earlier real file writes before blocking the shortcut save.
+      var presentationSettled = false;
+      final presentationBarrier = model.savePresentation().whenComplete(
+        () => presentationSettled = true,
+      );
+      while (!presentationSettled) {
+        await tester.pump();
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 20)),
+        );
+      }
+      await presentationBarrier;
       pendingPreferenceWrite = Completer<void>();
       await tester.tap(find.text('Apply'));
       for (
