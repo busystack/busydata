@@ -402,9 +402,15 @@ typedef _NtOpenD =
 int _workspaceWindowsRoot(String path) {
   final name = _native.wide(path);
   try {
-    final handle = _native.library.lookupFunction<_CreateN, _CreateD>(
-      'CreateFileW',
-    )(name, 0x1000a0, 1, nullptr, 3, 0x02200000, 0);
+    final handle = _native.windowsFiles.create(
+      name,
+      0x1000a0,
+      1,
+      nullptr,
+      3,
+      0x02200000,
+      0,
+    );
     if (handle == -1) {
       throw FileSystemException(
         'Cannot hold workspace volume',
@@ -531,11 +537,7 @@ String _workspaceFinalPath(int handle) {
   }
   final memory = _native.allocate(65536).cast<Uint16>();
   try {
-    final count = _native.library
-        .lookupFunction<
-          Uint32 Function(IntPtr, Pointer<Uint16>, Uint32, Uint32),
-          int Function(int, Pointer<Uint16>, int, int)
-        >('GetFinalPathNameByHandleW')(handle, memory, 32768, 0);
+    final count = _native.windowsFiles.finalPath(handle, memory, 32768, 0);
     if (count == 0 || count >= 32768) {
       throw FileSystemException(
         'Cannot identify held workspace directory',
@@ -566,13 +568,7 @@ int _workspaceRead(int handle, Pointer<Uint8> buffer, int count) {
   }
   final receipt = _native.allocate(4).cast<Uint32>();
   try {
-    if (_native.library.lookupFunction<_WinWriteN, _WinWriteD>('ReadFile')(
-          handle,
-          buffer,
-          count,
-          receipt,
-          nullptr,
-        ) ==
+    if (_native.windowsFiles.read(handle, buffer, count, receipt, nullptr) ==
         0) {
       throw FileSystemException(
         'Cannot read confined workspace file',

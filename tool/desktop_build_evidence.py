@@ -20,7 +20,8 @@ def verify_existing_bundle(platform, report, bundle, source):
         raise RuntimeError('Build the fresh ordinary desktop product before native acceptance')
     required = {'backend/lib/busydata-backend-0.1.0.jar', 'backend/dependency-inventory.json'}
     required.update(('busydata', 'lib/libapp.so', 'backend/runtime/bin/java') if platform == 'linux'
-                    else ('busydata.exe', 'flutter_windows.dll', 'data/app.so', 'backend/runtime/bin/java.exe'))
+                    else ('busydata.exe', 'flutter_windows.dll', 'data/app.so', 'backend/runtime/bin/java.exe',
+                          'backend/native/busydata_windows_files.dll'))
     recorded = report.get('files', [])
     if not isinstance(recorded, list) or not 1 <= len(recorded) <= 20000:
         raise RuntimeError('Product bundle inventory budget')
@@ -94,7 +95,8 @@ def build(platform, no_pub=False):
         required = ('busydata', 'lib/libapp.so', 'backend/runtime/bin/java')
     else:
         bundle = ROOT / 'build/windows/x64/runner/Release'
-        required = ('busydata.exe', 'flutter_windows.dll', 'data/app.so', 'backend/runtime/bin/java.exe')
+        required = ('busydata.exe', 'flutter_windows.dll', 'data/app.so', 'backend/runtime/bin/java.exe',
+                    'backend/native/busydata_windows_files.dll')
     for name in (*required, 'backend/lib/busydata-backend-0.1.0.jar', 'backend/dependency-inventory.json'):
         if not (bundle / name).is_file():
             raise RuntimeError('Incomplete product bundle: ' + name)

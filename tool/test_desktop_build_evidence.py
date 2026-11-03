@@ -17,6 +17,7 @@ class DesktopBuildEvidenceTest(unittest.TestCase):
             names = {
                 'busydata.exe', 'flutter_windows.dll', 'data/app.so',
                 'backend/runtime/bin/java.exe',
+                'backend/native/busydata_windows_files.dll',
                 'backend/lib/busydata-backend-0.1.0.jar',
                 'backend/dependency-inventory.json',
                 'data/nested directory/資料.txt',

@@ -213,6 +213,13 @@ fail rather than becoming a passing skipped matrix. Testcontainers is test-only.
 Exact Linux button/workbench PNG baselines run on Linux, where their reviewed
 font rasterization applies. Windows records those platform skips explicitly;
 they do not certify or replace native Fluent presentation acceptance.
+The Windows procedure builds/tests BusyData's file-call DLL before Flutter tests.
+Its tiny Win32 wrappers capture each return value and error in the same native
+call, before Dart runtime work can change thread-local `GetLastError`. Standalone
+Windows Flutter tests require that build and the explicit compile-time
+`--dart-define=BUSYDATA_WINDOWS_FILE_LIBRARY=<absolute-built-dll>` argument.
+Ordinary Windows builds load only the packaged `backend/native` DLL by absolute
+path; they contain no test path or alternate filesystem policy.
 
 Linux needs clang/cmake/ninja/pkg-config, libgtk-3-dev, libhandy-1-dev,
 libsecret-1-dev and liblzma-dev. Prepare the verified release bundle, then use

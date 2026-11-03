@@ -168,7 +168,7 @@ jobs:
         run: |
           python tool/verification_evidence.py unavailable --stage msix --reason 'Approved native MSIX test identity, artwork, signing and installed acceptance are not configured on this runner; packaging/source tests do not accept an installed MSIX.'
           if ($LASTEXITCODE -ne 0) { throw 'Could not record unavailable MSIX acceptance' }
-          python tool/record_verification.py --required windows-prerequisites configuration toolchain flutter-dependencies official-dependencies localizations java protocol format analyze boundaries flutter-tests runtime sources inventory lifecycle windows-release windows-native-build windows-native msix
+          python tool/record_verification.py --required windows-prerequisites configuration toolchain flutter-dependencies official-dependencies localizations java protocol format analyze boundaries windows-files-configure windows-files-build windows-files-native flutter-tests runtime sources inventory lifecycle windows-release windows-native-build windows-native msix
           if ($LASTEXITCODE -ne 0) { throw 'Full Windows/MSIX acceptance remains incomplete' }
       - uses: actions/upload-artifact@v4
         if: always()

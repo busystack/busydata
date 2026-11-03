@@ -30,7 +30,11 @@ try {
   Invoke-VerificationStage 'format' @('dart','format','--output=none','--set-exit-if-changed','lib','test','tool','integration_test')
   Invoke-VerificationStage 'analyze' @('flutter','analyze')
   Invoke-VerificationStage 'boundaries' @('dart','run','tool/check_platform_boundaries.dart')
-  Invoke-VerificationStage 'flutter-tests' @('flutter','test','--machine')
+  Invoke-VerificationStage 'windows-files-configure' @('cmake','-S','backend/native','-B','backend/target/native-build')
+  Invoke-VerificationStage 'windows-files-build' @('cmake','--build','backend/target/native-build','--config','Release','--target','busydata_windows_files','busydata_windows_files_test')
+  Invoke-VerificationStage 'windows-files-native' @('ctest','--test-dir','backend/target/native-build','-C','Release','-R','^windows_file_error_capture$','--output-on-failure')
+  $windowsFileLibrary=(Resolve-Path 'backend/target/native-build/Release/busydata_windows_files.dll').Path
+  Invoke-VerificationStage 'flutter-tests' @('flutter','test','--machine',"--dart-define=BUSYDATA_WINDOWS_FILE_LIBRARY=$windowsFileLibrary")
   Invoke-VerificationStage 'runtime' @('python','tool/bundle_backend.py') @() @('backend/target/bundle/runtime-check.json')
   Invoke-VerificationStage 'sources' @('python','tool/prepare_sources.py')
   Invoke-VerificationStage 'inventory' @('python','tool/dependency_inventory.py')
@@ -39,7 +43,7 @@ try {
   Invoke-VerificationStage 'windows-release' @('python','tool/build_windows_release.py') @() @('build/windows-release-build.json')
   Invoke-VerificationStage 'windows-native-build' @('cmake','--build','build/windows/x64','--config','Release','--target','busydata_runner_native_test')
   Invoke-VerificationStage 'windows-native' @('ctest','--test-dir','build/windows/x64/runner','-C','Release','--output-on-failure')
-  & python tool/record_verification.py --required windows-prerequisites configuration toolchain flutter-dependencies official-dependencies localizations java protocol format analyze boundaries flutter-tests runtime sources inventory lifecycle windows-release windows-native-build windows-native
+  & python tool/record_verification.py --required windows-prerequisites configuration toolchain flutter-dependencies official-dependencies localizations java protocol format analyze boundaries windows-files-configure windows-files-build windows-files-native flutter-tests runtime sources inventory lifecycle windows-release windows-native-build windows-native
   if ($LASTEXITCODE -ne 0) { throw 'Windows verification evidence is incomplete or invalid' }
 } finally {
   $env:PUB_CACHE=$previousPubCache

@@ -9,6 +9,7 @@ import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
 
 part 'confined_workspace.dart';
+part 'windows_file_calls.dart';
 
 enum OutputPhase {
   prepared,
@@ -337,7 +338,7 @@ String _hashOutputWorker(String path) {
   Pointer<Uint8> buffer = nullptr;
   try {
     handle = Platform.isWindows
-        ? _native.library.lookupFunction<_CreateN, _CreateD>('CreateFileW')(
+        ? _native.windowsFiles.create(
             name.cast<Uint16>(),
             0x80000000,
             1,
@@ -479,57 +480,18 @@ typedef _LocalAllocateN = Pointer<Void> Function(Uint32, IntPtr);
 typedef _LocalAllocateD = Pointer<Void> Function(int, int);
 typedef _LocalFreeN = Pointer<Void> Function(Pointer<Void>);
 typedef _LocalFreeD = Pointer<Void> Function(Pointer<Void>);
-typedef _CreateN =
-    IntPtr Function(
-      Pointer<Uint16>,
-      Uint32,
-      Uint32,
-      Pointer<Void>,
-      Uint32,
-      Uint32,
-      IntPtr,
-    );
-typedef _CreateD =
-    int Function(Pointer<Uint16>, int, int, Pointer<Void>, int, int, int);
-typedef _InfoN = Int32 Function(IntPtr, Pointer<Uint8>);
-typedef _InfoD = int Function(int, Pointer<Uint8>);
 typedef _WinCloseN = Int32 Function(IntPtr);
 typedef _WinCloseD = int Function(int);
-typedef _WinMoveN = Int32 Function(Pointer<Uint16>, Pointer<Uint16>, Uint32);
-typedef _WinMoveD = int Function(Pointer<Uint16>, Pointer<Uint16>, int);
-typedef _ErrorN = Uint32 Function();
-typedef _ErrorD = int Function();
 typedef _WriteN = IntPtr Function(Int32, Pointer<Uint8>, IntPtr);
 typedef _WriteD = int Function(int, Pointer<Uint8>, int);
-typedef _WinWriteN =
-    Int32 Function(
-      IntPtr,
-      Pointer<Uint8>,
-      Uint32,
-      Pointer<Uint32>,
-      Pointer<Void>,
-    );
-typedef _WinWriteD =
-    int Function(int, Pointer<Uint8>, int, Pointer<Uint32>, Pointer<Void>);
 
 class _NativeOutput {
   _NativeOutput()
     : library = Platform.isWindows
           ? DynamicLibrary.open('kernel32.dll')
-          : DynamicLibrary.process() {
-    if (Platform.isWindows) {
-      // Resolving a symbol after a failed Win32 call can overwrite its error.
-      // Resolve and invoke this short accessor before any filesystem operation,
-      // including the first operation in a new file-I/O isolate.
-      _windowsError = library.lookupFunction<_ErrorN, _ErrorD>(
-        'GetLastError',
-        isLeaf: true,
-      );
-      _windowsError();
-    }
-  }
+          : DynamicLibrary.process();
   final DynamicLibrary library;
-  late final _ErrorD _windowsError;
+  late final windowsFiles = _WindowsFileCalls(this);
   Pointer<Uint8> allocate(int size) {
     final memory = Platform.isWindows
         ? library.lookupFunction<_LocalAllocateN, _LocalAllocateD>(
@@ -574,14 +536,14 @@ class _NativeOutput {
   }
 
   int error() => Platform.isWindows
-      ? _windowsError()
+      ? windowsFiles.lastError
       : library.lookupFunction<_ErrnoN, _ErrnoD>('__errno_location')().value;
 
   int openPartial(String path) {
     final name = Platform.isWindows ? wide(path).cast<Uint8>() : string(path);
     try {
       final handle = Platform.isWindows
-          ? library.lookupFunction<_CreateN, _CreateD>('CreateFileW')(
+          ? windowsFiles.create(
               name.cast<Uint16>(),
               0x40000080,
               0,
@@ -617,9 +579,7 @@ class _NativeOutput {
 
   void flush(int handle) {
     final status = Platform.isWindows
-        ? library.lookupFunction<_WinCloseN, _WinCloseD>('FlushFileBuffers')(
-            handle,
-          )
+        ? windowsFiles.flush(handle)
         : library.lookupFunction<_CloseN, _CloseD>('fsync')(handle);
     if (Platform.isWindows ? status == 0 : status != 0) {
       throw OutputCommitFailure(
@@ -637,7 +597,7 @@ class _NativeOutput {
       while (written < count) {
         int size;
         if (Platform.isWindows) {
-          if (library.lookupFunction<_WinWriteN, _WinWriteD>('WriteFile')(
+          if (windowsFiles.write(
                 handle,
                 bytes + written,
                 count - written,
@@ -687,10 +647,7 @@ class _NativeOutput {
     try {
       if (!Platform.isWindows) empty = string('');
       if (Platform.isWindows) {
-        if (library.lookupFunction<_InfoN, _InfoD>(
-              'GetFileInformationByHandle',
-            )(handle, information) ==
-            0) {
+        if (windowsFiles.information(handle, information) == 0) {
           throw OutputCommitFailure(
             'Cannot inspect held output parent (Windows error ${error()})',
           );
@@ -753,15 +710,7 @@ class _NativeOutput {
       var handle = -1;
       try {
         information = allocate(52);
-        handle = library.lookupFunction<_CreateN, _CreateD>('CreateFileW')(
-          name,
-          0x80,
-          3,
-          nullptr,
-          3,
-          0x02200000,
-          0,
-        );
+        handle = windowsFiles.create(name, 0x80, 3, nullptr, 3, 0x02200000, 0);
         if (handle == -1) {
           final code = error();
           if (code == 2 || code == 3) return null;
@@ -769,10 +718,7 @@ class _NativeOutput {
             'Cannot inspect selected output (Windows error $code)',
           );
         }
-        if (library.lookupFunction<_InfoN, _InfoD>(
-              'GetFileInformationByHandle',
-            )(handle, information) ==
-            0) {
+        if (windowsFiles.information(handle, information) == 0) {
           throw OutputCommitFailure(
             'Cannot inspect selected output (Windows error ${error()})',
           );
@@ -818,7 +764,7 @@ class _NativeOutput {
             : string(path);
         try {
           final handle = Platform.isWindows
-              ? library.lookupFunction<_CreateN, _CreateD>('CreateFileW')(
+              ? windowsFiles.create(
                   name.cast<Uint16>(),
                   // FILE_TRAVERSE participates in directory sharing checks;
                   // metadata-only access does not hold a no-delete lease.
@@ -859,12 +805,7 @@ class _NativeOutput {
       Pointer<Uint16> to = nullptr;
       try {
         to = wide(destination);
-        if (library.lookupFunction<_WinMoveN, _WinMoveD>('MoveFileExW')(
-              from,
-              to,
-              8,
-            ) ==
-            0) {
+        if (windowsFiles.move(from, to, 8) == 0) {
           throw OutputCommitFailure(
             'Safe output commit failed; the destination was not overwritten (Windows error ${error()})',
           );

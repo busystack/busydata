@@ -8,7 +8,7 @@ foreach ($field in @('identityName','publisher','publisherDisplayName','assetsDi
   if (Test-BusyDataPlaceholder ([string]$config.$field)) { throw "Supply approved $field; no production identity or artwork is generated." }
 }
 Assert-BusyDataMsixVersion -Version $config.msixVersion -PreviousVersion $config.previousMsixVersion
-foreach ($file in @('busydata.exe','flutter_windows.dll','backend/runtime/bin/java.exe','backend/lib/busydata-backend-0.1.0.jar','backend/runtime-check.json','backend/bom.json')) {
+foreach ($file in @('busydata.exe','flutter_windows.dll','backend/runtime/bin/java.exe','backend/native/busydata_windows_files.dll','backend/lib/busydata-backend-0.1.0.jar','backend/runtime-check.json','backend/bom.json')) {
   if (-not (Test-Path -LiteralPath (Join-Path $ReleasePath $file))) { throw "Missing bundled component: $file" }
 }
 $output='build/windows/store'

@@ -25,7 +25,7 @@ subprocess.run(['cmake', '-S', str(root / 'backend/native'), '-B', str(native_bu
 subprocess.run(['cmake', '--build', str(native_build), '--config', 'Release'], check=True)
 subprocess.run(['ctest', '--test-dir', str(native_build), '-C', 'Release',
                 '--output-on-failure'], check=True)
-native_files = ['busydata_tool_launcher.exe'] if os.name == 'nt' else []
+native_files = ['busydata_tool_launcher.exe', 'busydata_windows_files.dll'] if os.name == 'nt' else []
 # Only generated BusyData bundle contents: never leave an obsolete injected
 # transport in a package built incrementally. Installed clients are untouched.
 for stale in ('busydata_hostname_forward.dll', 'libbusydata_hostname_forward.so'):

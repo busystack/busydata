@@ -33,7 +33,8 @@ class WindowsNativePolicyTest(unittest.TestCase):
         assignment = next(item for item in tree.body if isinstance(item, ast.Assign)
                           and any(isinstance(target, ast.Name) and target.id == 'native_files'
                                   for target in item.targets))
-        self.assertEqual(['busydata_tool_launcher.exe'], ast.literal_eval(assignment.value.body))
+        self.assertEqual(['busydata_tool_launcher.exe', 'busydata_windows_files.dll'],
+                         ast.literal_eval(assignment.value.body))
         self.assertEqual([], ast.literal_eval(assignment.value.orelse))
         stale_loop = next(item for item in tree.body if isinstance(item, ast.For)
                           and isinstance(item.target, ast.Name) and item.target.id == 'stale'
