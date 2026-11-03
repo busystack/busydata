@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:ffi';
+import 'dart:isolate';
 import 'package:busydata/src/features/workspace/documents.dart';
 import 'package:busydata/src/features/workspace/workbench_model.dart';
 import 'package:busydata/src/platform/common/output_commit.dart';
@@ -92,6 +93,28 @@ void main() {
   tearDown(() async {
     await root.delete(recursive: true);
   });
+
+  test(
+    'fresh file workers recognize absent destinations before publication',
+    () async {
+      final path = '${root.path}/new-output.sql';
+      for (var attempt = 0; attempt < 3; attempt++) {
+        expect(
+          await Isolate.run(() async {
+            final destination = await OutputDestination.newDestination(
+              File(path),
+            );
+            return destination.exists;
+          }),
+          isFalse,
+        );
+      }
+      final destination = await OutputDestination.newDestination(File(path));
+      await destination.commit(partial);
+      expect(await File(path).readAsString(), 'new output');
+      expect(await partial.exists(), isFalse);
+    },
+  );
 
   test(
     'native content verification denial restores without opening content again',

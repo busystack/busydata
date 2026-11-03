@@ -516,8 +516,20 @@ class _NativeOutput {
   _NativeOutput()
     : library = Platform.isWindows
           ? DynamicLibrary.open('kernel32.dll')
-          : DynamicLibrary.process();
+          : DynamicLibrary.process() {
+    if (Platform.isWindows) {
+      // Resolving a symbol after a failed Win32 call can overwrite its error.
+      // Resolve and invoke this short accessor before any filesystem operation,
+      // including the first operation in a new file-I/O isolate.
+      _windowsError = library.lookupFunction<_ErrorN, _ErrorD>(
+        'GetLastError',
+        isLeaf: true,
+      );
+      _windowsError();
+    }
+  }
   final DynamicLibrary library;
+  late final _ErrorD _windowsError;
   Pointer<Uint8> allocate(int size) {
     final memory = Platform.isWindows
         ? library.lookupFunction<_LocalAllocateN, _LocalAllocateD>(
@@ -562,7 +574,7 @@ class _NativeOutput {
   }
 
   int error() => Platform.isWindows
-      ? library.lookupFunction<_ErrorN, _ErrorD>('GetLastError')()
+      ? _windowsError()
       : library.lookupFunction<_ErrnoN, _ErrnoD>('__errno_location')().value;
 
   int openPartial(String path) {
@@ -808,7 +820,9 @@ class _NativeOutput {
           final handle = Platform.isWindows
               ? library.lookupFunction<_CreateN, _CreateD>('CreateFileW')(
                   name.cast<Uint16>(),
-                  0x80,
+                  // FILE_TRAVERSE participates in directory sharing checks;
+                  // metadata-only access does not hold a no-delete lease.
+                  0x20,
                   3,
                   nullptr,
                   3,
