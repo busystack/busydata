@@ -1,8 +1,11 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:busydata/src/backend/generated/busydata.pb.dart';
 import 'package:busydata/src/features/workspace/workbench_model.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:busydata/src/features/workspace/documents.dart'
+    show atomicWrite;
 import 'support/fake_backend.dart';
 
 void main() {
@@ -43,6 +46,7 @@ void main() {
   });
   tearDown(() async {
     model.dispose();
+    await model.recoverNow();
     await directory.delete(recursive: true);
   });
   void noServerWork() {
@@ -103,6 +107,7 @@ void main() {
         noServerWork();
       } finally {
         restored.dispose();
+        await restored.recoverNow();
       }
     },
   );
@@ -141,6 +146,7 @@ void main() {
         noServerWork();
       } finally {
         restored.dispose();
+        await restored.recoverNow();
       }
     },
   );
@@ -194,6 +200,7 @@ void main() {
         noServerWork();
       } finally {
         restored.dispose();
+        await restored.recoverNow();
       }
     },
   );
@@ -305,6 +312,7 @@ void main() {
         noServerWork();
       } finally {
         restored.dispose();
+        await restored.recoverNow();
       }
     },
   );
@@ -331,6 +339,7 @@ void main() {
         expect(failing.virtualViews, isEmpty);
       } finally {
         failing.dispose();
+        await failing.recoverNow();
       }
       await expectLater(
         model.createSourceFolderPath('a/b/c/d/e/f/g/h/i', ''),
@@ -339,6 +348,88 @@ void main() {
       expect(model.sourceFolders, isEmpty);
       expect(() => view('one', first, sql: 'x' * 16385), throwsFormatException);
       noServerWork();
+    },
+  );
+  test(
+    'disposed local recovery releases its parent guard only after draining',
+    () async {
+      final root = await Directory.systemTemp.createTemp(
+        'local-explorer-drain-',
+      );
+      final entered = Completer<void>();
+      final release = Completer<void>();
+      var commits = 0;
+      final traced = WorkbenchModel(
+        root,
+        recoveryWrite: (file, bytes) => atomicWrite(
+          file,
+          bytes,
+          commitHook: (phase) async {
+            if (phase == 'before-finalization' && commits++ == 0) {
+              entered.complete();
+              await release.future;
+            }
+          },
+        ),
+      )..newDocument(text: 'SELECT 71;');
+      final saving = traced.recoverNow();
+      final destination = Directory('${root.path}-moved');
+      var moved = false;
+      try {
+        await entered.future;
+        traced.dispose();
+        if (Platform.isWindows) {
+          FileSystemException? blocked;
+          try {
+            await root.rename(destination.path);
+            moved = true;
+          } on FileSystemException catch (error) {
+            blocked = error;
+          }
+          expect(
+            moved,
+            isFalse,
+            reason:
+                'The disposed model still owns its actual native parent guard',
+          );
+          expect(blocked?.osError?.errorCode, 32);
+        }
+        var drained = false;
+        final draining = traced.recoverNow().then((_) => drained = true);
+        await Future<void>.delayed(Duration.zero);
+        expect(
+          drained,
+          isFalse,
+          reason: 'Cleanup must wait for the real held commit',
+        );
+        release.complete();
+        await saving;
+        await draining;
+        final completed = commits;
+        await traced.recoverNow();
+        expect(
+          commits,
+          completed,
+          reason: 'Disposed drain starts no new write',
+        );
+        expect(await File('${root.path}/drafts.json').exists(), isTrue);
+        await root.rename(destination.path);
+        moved = true;
+      } finally {
+        if (!release.isCompleted) release.complete();
+        if (!traced.isDisposed) traced.dispose();
+        try {
+          await saving;
+        } finally {
+          try {
+            await traced.recoverNow();
+          } finally {
+            if (moved && await destination.exists())
+              await destination.delete(recursive: true);
+            if (await root.exists()) await root.delete(recursive: true);
+          }
+        }
+      }
     },
   );
 }
