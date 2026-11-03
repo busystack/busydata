@@ -91,7 +91,7 @@ class OfficialSdkTest(unittest.TestCase):
             return subprocess.check_output(['git', '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', '-C', str(self.root), *args], env=self.environment, stderr=subprocess.DEVNULL, timeout=10)
         self.git = git
         git('init', '--template=', '--initial-branch=fixture')
-        (self.root / 'framework.dart').write_text('const official = true;\n')
+        (self.root / 'framework.dart').write_bytes(b'const official = true;\n')
         git('add', 'framework.dart'); git('commit', '-m', 'Official source fixture')
         revision = git('rev-parse', 'HEAD').decode().strip()
         self.identity = {'frameworkRevision': revision, 'frameworkVersion': '3.47.5', 'dartSdkVersion': '3.13.4'}
@@ -103,6 +103,74 @@ class OfficialSdkTest(unittest.TestCase):
 
     def check(self):
         return verify_sdk(self.root, self.spec, 'fixture-host')
+
+    def pin_archive_source(self, records):
+        raw = json.dumps(records, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
+        self.spec['sourceTrees'] = {'fixture-host': {
+            'files': len(records), 'sha256': hashlib.sha256(raw).hexdigest()}}
+
+    def source_record(self, name, mode='100644'):
+        content = (self.root / name).read_bytes()
+        return [name, mode, len(content), hashlib.sha256(content).hexdigest()]
+
+    def test_publisher_crlf_source_requires_its_exact_archive_digest(self):
+        source = self.root / 'framework.dart'
+        source.write_bytes(b'const official = true;\r\n')
+        self.pin_archive_source([self.source_record('framework.dart')])
+        self.assertEqual(1, self.check())
+        # Canonical Git equality alone must not authorize a different raw SDK.
+        source.write_bytes(b'const official = true;\n')
+        with self.assertRaisesRegex(ValueError, 'official source archive bytes'):
+            self.check()
+
+    def test_raw_archive_digest_cannot_authorize_changed_upstream_source(self):
+        (self.root / 'framework.dart').write_bytes(b'const downstream = true;\r\n')
+        self.pin_archive_source([self.source_record('framework.dart')])
+        with self.assertRaisesRegex(ValueError, 'source modifications'):
+            self.check()
+
+    def test_publisher_file_representation_of_git_link_stays_bound_to_target(self):
+        target = b'framework.dart'
+        (self.root / 'source-link').write_bytes(target)
+        blob = subprocess.check_output(['git', '-C', str(self.root), 'hash-object', '-w', '--stdin'],
+                                       input=target, env=self.environment).decode().strip()
+        self.git('update-index', '--add', '--cacheinfo', '120000,' + blob + ',source-link')
+        self.git('commit', '-m', 'Official archive link fixture')
+        self.identity['frameworkRevision'] = self.git('rev-parse', 'HEAD').decode().strip()
+        (self.root / 'bin/cache/flutter.version.json').write_text(json.dumps(self.identity))
+        with self.assertRaisesRegex(ValueError, 'source link was replaced'):
+            self.check()
+        self.pin_archive_source([self.source_record('framework.dart'),
+                                 self.source_record('source-link', '120000')])
+        self.assertEqual(1, self.check())
+        (self.root / 'source-link').write_bytes(b'elsewhere.dart')
+        with self.assertRaisesRegex(ValueError, 'source modifications'):
+            self.check()
+
+    def test_archive_profile_preserves_tracked_binary_crlf_bytes(self):
+        (self.root / 'binary.bin').write_bytes(b'\x00publisher binary\r\n')
+        self.git('add', 'binary.bin'); self.git('commit', '-m', 'Official binary fixture')
+        self.identity['frameworkRevision'] = self.git('rev-parse', 'HEAD').decode().strip()
+        (self.root / 'bin/cache/flutter.version.json').write_text(json.dumps(self.identity))
+        self.pin_archive_source([self.source_record('binary.bin'), self.source_record('framework.dart')])
+        self.assertEqual(1, self.check())
+        (self.root / 'binary.bin').write_bytes(b'\x00publisher binary\n')
+        with self.assertRaisesRegex(ValueError, 'source modifications'):
+            self.check()
+
+    def test_archive_file_count_and_digest_cannot_be_missing_or_relabelled(self):
+        self.pin_archive_source([self.source_record('framework.dart')])
+        for change in ({'files': 2}, {'sha256': '0' * 64}, {'sha256': ''}, {'files': True}):
+            original = dict(self.spec['sourceTrees']['fixture-host'])
+            self.spec['sourceTrees']['fixture-host'].update(change)
+            with self.subTest(change=change), self.assertRaisesRegex(ValueError, 'source archive'):
+                self.check()
+            self.spec['sourceTrees']['fixture-host'] = original
+
+    def test_windows_requires_the_reviewed_publisher_source_archive(self):
+        self.spec['artifacts']['win32'] = self.spec['artifacts']['fixture-host']
+        with self.assertRaisesRegex(ValueError, 'No reviewed official Windows SDK source archive'):
+            verify_sdk(self.root, self.spec, 'win32')
 
     def test_official_source_and_binary_are_required_together(self):
         self.assertEqual(1, self.check())

@@ -3143,6 +3143,14 @@
           ]
         }
       ]
+    },
+    "sourceTrees": {
+      "win32": {
+        "archiveUrl": "https://storage.googleapis.com/flutter_infra_release/releases/stable/windows/flutter_windows_3.47.5-stable.zip",
+        "archiveSha256": "0ccd71931f49c2fbe394b1eeb6d79af3d624058a043ea0d03d34160581624fb8",
+        "files": 16074,
+        "sha256": "bc4b6e42087d61f9c4b0c7adf495bc2a2c9bcf115277a78138886a4326ad057f"
+      }
     }
   }
 }

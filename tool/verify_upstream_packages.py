@@ -61,6 +61,14 @@ def verify_sdk(root, expected, host=None, artifact_inputs=None):
     if head != expected['identity']['frameworkRevision']:
         raise ValueError('Flutter framework is not the approved upstream revision')
     entries = subprocess.check_output([*command, 'ls-tree', '-rz', '--full-tree', 'HEAD'], env=environment, timeout=30)
+    source_tree = expected.get('sourceTrees', {}).get(host)
+    if host == 'win32' and source_tree is None:
+        raise ValueError('No reviewed official Windows SDK source archive identity')
+    if source_tree is not None and (not isinstance(source_tree, dict) or
+            type(source_tree.get('files')) is not int or not 1 <= source_tree['files'] <= 100000 or
+            not re.fullmatch('[0-9a-f]{64}', str(source_tree.get('sha256', '')))):
+        raise ValueError('Invalid official SDK source archive identity')
+    raw_sources = []
     crlf = ('*.bat', '*.ps1', '*.rc', '*.sln', '*.props', '*.vcxproj',
             '*.vcxproj.filters', '*.sln.tmpl', '*.props.tmpl', '*.vcxproj.tmpl')
     for entry in entries.split(b'\0'):
@@ -71,18 +79,33 @@ def verify_sdk(root, expected, host=None, artifact_inputs=None):
         if kind != b'blob' or mode not in (b'100644', b'100755', b'120000'):
             raise ValueError('Unsupported official SDK source entry')
         if mode == b'120000':
-            if not path.is_symlink(): raise ValueError('Flutter SDK source link was replaced')
-            content = os.fsencode(os.readlink(path))
+            if path.is_symlink():
+                content = os.fsencode(os.readlink(path))
+            elif source_tree is not None and path.is_file():
+                # The official Windows ZIP stores Git link targets as files.
+                # The full raw publisher source digest below binds that form.
+                content = path.read_bytes()
+            else:
+                raise ValueError('Flutter SDK source link was replaced')
         else:
             if path.is_symlink() or not path.is_file(): raise ValueError('Flutter SDK source is missing or substituted')
             if os.name != 'nt' and bool(path.stat().st_mode & 0o111) != (mode == b'100755'):
                 raise ValueError('Flutter SDK source mode was modified')
             content = path.read_bytes()
-            if any(fnmatch.fnmatchcase(os.fsdecode(relative), pattern) for pattern in crlf) and content.count(b'\n') == content.count(b'\r\n'):
-                content = content.replace(b'\r\n', b'\n')
+        if source_tree is not None:
+            raw_sources.append([os.fsdecode(relative), mode.decode('ascii'), len(content),
+                                hashlib.sha256(content).hexdigest()])
         digest = hashlib.sha1(b'blob ' + str(len(content)).encode() + b'\0' + content).hexdigest()
+        if digest.encode() != object_id and mode != b'120000' and content.count(b'\n') == content.count(b'\r\n') and (
+                source_tree is not None or any(fnmatch.fnmatchcase(os.fsdecode(relative), pattern) for pattern in crlf)):
+            content = content.replace(b'\r\n', b'\n')
+            digest = hashlib.sha1(b'blob ' + str(len(content)).encode() + b'\0' + content).hexdigest()
         if digest.encode() != object_id:
             raise ValueError('Flutter SDK contains source modifications')
+    if source_tree is not None:
+        raw_manifest = json.dumps(raw_sources, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
+        if len(raw_sources) != source_tree['files'] or hashlib.sha256(raw_manifest).hexdigest() != source_tree['sha256']:
+            raise ValueError('Flutter SDK differs from the official source archive bytes')
     verified = 0
     for artifact in expected['artifacts'][host]:
         directory = PurePosixPath(artifact['directory'])
