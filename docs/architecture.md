@@ -110,6 +110,10 @@ MySQL disables the driver's implicit net_write_timeout changes so streamed-resul
 cleanup preserves session settings and cached transaction status.
 The SQL deadline includes fetching, preventing unlimited job-owned read transactions during slow
 consumption. Cancellation is not rollback of already committed statements.
+After initialization, a console connection's physical read timeout retains a
+five-minute minimum and allows the selected SQL deadline plus a five-second
+cancellation window. Connection setup, metadata views and cancellation
+connections retain their original five-minute read bound.
 
 Java retains private data and row-offset index spools: 1GiB combined quota, 64 results, 1M rows/result,
 256KiB encoded rows. Large text/binary previews have separate full-value files;

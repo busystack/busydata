@@ -59,8 +59,16 @@ public final class SessionRegistry implements AutoCloseable {
             // their identities; initialContext still refuses physical retargeting.
             var opening=profile.getEngine()==Engine.POSTGRESQL&&!catalog.isEmpty()?r.toBuilder().setProfile(profile.toBuilder().setDatabase(catalog)).build():r;
             SshTunnel t=null;Connection opened=null;
-            try{t=profile.getSsh().getEnabled()?new SshTunnel(r,trust==null?null:trust.resolve(profile),temporaryFiles):null;opened=opener.open(adapter,opening,t==null?null:t.port());if(profile.getEngine()==Engine.MYSQL)cancellation=opener.open(adapter,r,t==null?null:t.port());connection=opened;adapter.initialContext(opened,r.getCatalog(),r.getSchema());databaseInfo=adapter.info(opened);identifierContext=io.busystack.busydata.metadata.NativeIdentifierCaseReader.identity(adapter,connection);autoCommit=connection.getAutoCommit();state=adapter.transaction(connection);context=adapter.context(connection);contextRevision=1;}catch(Exception e){if(opened!=null)try{opened.close();}catch(Exception cleanup){e.addSuppressed(cleanup);}if(cancellation!=null)try{cancellation.close();}catch(Exception cleanup){e.addSuppressed(cleanup);}if(t!=null)try{t.close();}catch(Exception cleanup){e.addSuppressed(cleanup);}Arrays.fill(password,'\0');Arrays.fill(tlsKeyPassword,'\0');throw e;}
+            try{t=profile.getSsh().getEnabled()?new SshTunnel(r,trust==null?null:trust.resolve(profile),temporaryFiles):null;opened=opener.open(adapter,opening,t==null?null:t.port());if(profile.getEngine()==Engine.MYSQL)cancellation=opener.open(adapter,r,t==null?null:t.port());connection=opened;adapter.initialContext(opened,r.getCatalog(),r.getSchema());databaseInfo=adapter.info(opened);identifierContext=io.busystack.busydata.metadata.NativeIdentifierCaseReader.identity(adapter,connection);autoCommit=connection.getAutoCommit();state=adapter.transaction(connection);context=adapter.context(connection);contextRevision=1;configureQueryReadDeadline();}catch(Exception e){if(opened!=null)try{opened.close();}catch(Exception cleanup){e.addSuppressed(cleanup);}if(cancellation!=null)try{cancellation.close();}catch(Exception cleanup){e.addSuppressed(cleanup);}if(t!=null)try{t.close();}catch(Exception cleanup){e.addSuppressed(cleanup);}Arrays.fill(password,'\0');Arrays.fill(tlsKeyPassword,'\0');throw e;}
             this.tunnel=t;
+        }
+        private void configureQueryReadDeadline()throws SQLException {
+            // Only the initialized console owns the selected SQL deadline.
+            // Setup, metadata views and cancellation connections keep their
+            // existing read bound. Allow the five-second cancellation window
+            // before an idle physical read can close this console connection.
+            int milliseconds=Math.toIntExact(Math.max(300000L,profile.getQueryTimeoutSeconds()*1000L+5000L));
+            if(milliseconds>300000)connection.setNetworkTimeout(Runnable::run,milliseconds);
         }
         private Session(Session original,String catalog)throws Exception {
             opener=original.opener;
