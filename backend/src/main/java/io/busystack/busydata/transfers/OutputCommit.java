@@ -68,7 +68,7 @@ public final class OutputCommit implements AutoCloseable {
             else if(os.contains("windows"))openedWindows=WindowsOutputFiles.open(parent);
             else throw new IOException("Safe destination commit is supported only on Linux and Windows");
             Path directory=openedLinux==null?parent:openedLinux.directory();
-            if(!Objects.equals(Files.readAttributes(parent,BasicFileAttributes.class,LinkOption.NOFOLLOW_LINKS).fileKey(),Files.readAttributes(directory,BasicFileAttributes.class).fileKey()))throw new IOException("Destination parent changed during opening");
+            if(openedLinux!=null&&!Objects.equals(Files.readAttributes(parent,BasicFileAttributes.class,LinkOption.NOFOLLOW_LINKS).fileKey(),Files.readAttributes(directory,BasicFileAttributes.class).fileKey()))throw new IOException("Destination parent changed during opening");
             if(!this.reviewed.equals(OutputTarget.fileIdentity(directory.resolve(target.getFileName()))))throw new IOException("Destination changed during opening; review it again");
             staging=Files.createTempFile(directory,".busydata-",".partial");
             created=OutputTarget.entryIdentity(staging);makePrivate(staging);

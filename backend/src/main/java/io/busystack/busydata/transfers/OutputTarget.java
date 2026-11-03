@@ -12,6 +12,9 @@ public final class OutputTarget {
     /** No-follow entry identity, independent of content approval. */
     record EntryIdentity(Object key, String kind) {}
     static EntryIdentity entryIdentity(Path path)throws IOException {
+        if(System.getProperty("os.name", "").startsWith("Windows")) {
+            try{return WindowsOutputFiles.entryIdentity(path);}catch(NoSuchFileException missing){return null;}
+        }
         final BasicFileAttributes attributes;
         try{attributes=Files.readAttributes(path,BasicFileAttributes.class,LinkOption.NOFOLLOW_LINKS);}
         catch(NoSuchFileException missing){return null;}
@@ -26,13 +29,14 @@ public final class OutputTarget {
         Path parent=target.toAbsolutePath().normalize().getParent();if(parent==null)throw new IOException("Destination has no parent directory");
         if(parent.getNameCount()>128)throw new IOException("Destination directory depth exceeds 128");
         StringBuilder identity=new StringBuilder(parent.toString());Path current=parent.getRoot();
-        for(Path component:parent){current=current.resolve(component);var attributes=Files.readAttributes(current,BasicFileAttributes.class,LinkOption.NOFOLLOW_LINKS);if(!attributes.isDirectory()||attributes.isSymbolicLink()||attributes.fileKey()==null)throw new IOException("Destination ancestors must be identifiable ordinary directories");identity.append('|').append(attributes.fileKey());}
+        for(Path component:parent){current=current.resolve(component);var entry=entryIdentity(current);if(entry==null||!entry.kind().equals("directory"))throw new IOException("Destination ancestors must be identifiable ordinary directories");identity.append('|').append(entry.key());}
         return identity.toString();
     }
     static String fileIdentity(Path target)throws Exception {
         final BasicFileAttributes before;
         try{before=Files.readAttributes(target,BasicFileAttributes.class,LinkOption.NOFOLLOW_LINKS);}catch(NoSuchFileException missing){return "absent";}
         if(!before.isRegularFile()||before.isSymbolicLink())throw new IOException("Destination must be an ordinary file");
+        Object beforeKey=fileKey(target,before);
         if(before.size()>32L*1024*1024*1024)throw new IOException("Existing destination exceeds the 32GiB reviewed-output limit");
         var digest=MessageDigest.getInstance("SHA-256");
         try(var input=Files.newInputStream(target,LinkOption.NOFOLLOW_LINKS)) {
@@ -40,9 +44,18 @@ public final class OutputTarget {
             while((count=input.read(buffer))>=0){if(Thread.currentThread().isInterrupted()||io.grpc.Context.current().isCancelled())throw new InterruptedIOException("Destination review cancelled");bytes+=count;if(bytes>32L*1024*1024*1024)throw new IOException("Destination grew beyond the 32GiB reviewed-output limit");digest.update(buffer,0,count);}
         }
         var after=Files.readAttributes(target,BasicFileAttributes.class,LinkOption.NOFOLLOW_LINKS);
-        if(!java.util.Objects.equals(before.fileKey(),after.fileKey())||before.size()!=after.size()||!before.lastModifiedTime().equals(after.lastModifiedTime()))throw new IOException("Destination changed during review");
-        if(after.fileKey()==null)throw new IOException("Filesystem does not expose destination identity");
-        return after.fileKey()+":"+after.size()+":"+HexFormat.of().formatHex(digest.digest());
+        Object afterKey=fileKey(target,after);
+        if(!java.util.Objects.equals(beforeKey,afterKey)||before.size()!=after.size()||!before.lastModifiedTime().equals(after.lastModifiedTime()))throw new IOException("Destination changed during review");
+        if(afterKey==null)throw new IOException("Filesystem does not expose destination identity");
+        return afterKey+":"+after.size()+":"+HexFormat.of().formatHex(digest.digest());
+    }
+    private static Object fileKey(Path path,BasicFileAttributes attributes)throws IOException {
+        if(System.getProperty("os.name", "").startsWith("Windows")) {
+            var entry=WindowsOutputFiles.entryIdentity(path);
+            if(!entry.kind().equals("file"))throw new IOException("Destination must be an ordinary file");
+            return entry.key();
+        }
+        return attributes.fileKey();
     }
     public static long quota(io.busystack.busydata.protocol.ToolRequest request) {
         long quota=request.getOutputLimitBytes()==0?8L*1024*1024*1024:request.getOutputLimitBytes();

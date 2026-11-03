@@ -11,6 +11,8 @@ import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 import java.nio.ByteOrder;
 import java.nio.file.Path;
+import java.nio.file.NoSuchFileException;
+import java.util.HexFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,11 +24,13 @@ import java.util.List;
  */
 final class WindowsOutputFiles implements AutoCloseable {
     private static final int FILE_SHARE_READ_WRITE = 3;
+    private static final int FILE_SHARE_READ_WRITE_DELETE = 7;
     private static final int OPEN_EXISTING = 3;
     private static final int OPEN_DIRECTORY_NO_REPARSE = 0x02000000 | 0x00200000;
     private static final int FILE_ATTRIBUTE_DIRECTORY = 0x10;
     private static final int FILE_ATTRIBUTE_REPARSE_POINT = 0x400;
     private static final int FILE_ATTRIBUTE_TAG_INFO = 9;
+    private static final int FILE_ID_INFO = 18;
     private static final int MOVEFILE_WRITE_THROUGH = 8;
     private static final ValueLayout.OfChar UTF16 = ValueLayout.JAVA_CHAR.withOrder(ByteOrder.LITTLE_ENDIAN);
     private final Path parent;
@@ -67,6 +71,57 @@ final class WindowsOutputFiles implements AutoCloseable {
             try { guard.close(); } catch (IOException cleanup) { failure.addSuppressed(cleanup); }
             throw failure;
         }
+    }
+
+    /** The approved Windows provider may omit BasicFileAttributes.fileKey().
+     * Query the no-follow handle instead: volume serial plus the 128-bit file
+     * ID identify the entry, including after a rename. No path/mtime surrogate
+     * is accepted. FILE_ID_INFO is documented by the Windows File API.
+     */
+    static OutputTarget.EntryIdentity entryIdentity(Path path) throws IOException {
+        if (!System.getProperty("os.name", "").startsWith("Windows") || ValueLayout.ADDRESS.byteSize() != 8)
+            throw new IOException("Windows entry identity requires the approved Windows x64 platform");
+        final Api api;
+        try { api = ApiHolder.INSTANCE; }
+        catch (LinkageError | RuntimeException failure) {
+            throw new IOException("Windows filesystem identity primitives are unavailable", failure);
+        }
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment state = arena.allocate(api.stateLayout);
+            MemorySegment handle = (MemorySegment) api.create.invokeExact(state, wide(arena, path),
+                0, FILE_SHARE_READ_WRITE_DELETE, MemorySegment.NULL, OPEN_EXISTING, OPEN_DIRECTORY_NO_REPARSE, MemorySegment.NULL);
+            if (handle.address() == -1L || handle.address() == 0L) {
+                int code = state.get(ValueLayout.JAVA_INT, api.errorOffset);
+                if (code == 2 || code == 3) throw new NoSuchFileException(path.toString());
+                throw nativeFailure("Identify output entry", code);
+            }
+            IOException primary = null;
+            try {
+                MemorySegment attributes = arena.allocate(8, 4);
+                int success = (int) api.info.invokeExact(state, handle, FILE_ATTRIBUTE_TAG_INFO, attributes, 8);
+                if (success == 0) throw nativeFailure("Inspect output entry", state.get(ValueLayout.JAVA_INT, api.errorOffset));
+                int flags = attributes.get(ValueLayout.JAVA_INT, 0);
+                MemorySegment identity = arena.allocate(24, 8);
+                success = (int) api.info.invokeExact(state, handle, FILE_ID_INFO, identity, 24);
+                if (success == 0) throw nativeFailure("Read output file ID", state.get(ValueLayout.JAVA_INT, api.errorOffset));
+                String key = "windows-volume=" + Long.toUnsignedString(identity.get(ValueLayout.JAVA_LONG, 0), 16)
+                    + ";file=" + HexFormat.of().formatHex(identity.asSlice(8, 16).toArray(ValueLayout.JAVA_BYTE));
+                String kind = (flags & FILE_ATTRIBUTE_REPARSE_POINT) != 0 ? "link"
+                    : (flags & FILE_ATTRIBUTE_DIRECTORY) != 0 ? "directory" : "file";
+                return new OutputTarget.EntryIdentity(key, kind);
+            } catch (IOException failure) { primary = failure; throw failure; }
+            catch (Throwable failure) { primary = invocationFailure(failure); throw primary; }
+            finally {
+                try {
+                    int success = (int) api.close.invokeExact(state, handle);
+                    if (success == 0) throw nativeFailure("Close output identity handle", state.get(ValueLayout.JAVA_INT, api.errorOffset));
+                } catch (Throwable failure) {
+                    IOException cleanup = failure instanceof IOException io ? io : invocationFailure(failure);
+                    if (primary != null) primary.addSuppressed(cleanup); else throw cleanup;
+                }
+            }
+        } catch (IOException failure) { throw failure; }
+        catch (Throwable failure) { throw invocationFailure(failure); }
     }
 
     private void lockDirectory(Path directory) throws IOException {
