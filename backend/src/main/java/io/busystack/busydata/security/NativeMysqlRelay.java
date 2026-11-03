@@ -32,6 +32,8 @@ public final class NativeMysqlRelay implements AutoCloseable {
     private volatile SocketChannel client;
     private volatile Socket upstream;
     private volatile boolean authenticated;
+    private final Thread serving;
+    private volatile Thread sendingThread;
     private final ScheduledExecutorService timer=Executors.newSingleThreadScheduledExecutor(Thread.ofVirtual().factory());
     private final ScheduledFuture<?> deadline;
 
@@ -58,7 +60,17 @@ public final class NativeMysqlRelay implements AutoCloseable {
         }
         directory=created;listener=server;
         deadline=timer.schedule(()->fail(new IOException("Native SSH connection/authentication timed out")),30,TimeUnit.SECONDS);
-        Thread.ofVirtual().name("busydata-native-relay").start(this::serve);
+        serving=ioThread("busydata-native-relay",this::serve);serving.start();
+    }
+
+    private Thread ioThread(String name,Runnable operation) {
+        // Windows virtual socket read/write pollers can lose readiness when
+        // both directions wait on one socket (OpenJDK JDK-8334574). Keep the
+        // pinned SDK and use its public blocking platform-thread interface.
+        // Each admitted native transfer owns exactly two IO threads; the
+        // existing two-transfer admission limit bounds these to four.
+        return windows?Thread.ofPlatform().daemon(true).name(name).unstarted(operation):
+            Thread.ofVirtual().name(name).unstarted(operation);
     }
 
     public void configure(ProcessBuilder builder,Path nativeDirectory)throws IOException {
@@ -143,7 +155,7 @@ public final class NativeMysqlRelay implements AutoCloseable {
             try{writePacket(serverOutput,response,shift);}finally{Arrays.fill(response.bytes,(byte)0);}
             final int delta=shift;final InputStream fromServer=serverInput;final OutputStream toServer=serverOutput;
             var sending=new CompletableFuture<Void>();
-            Thread sender=Thread.ofVirtual().name("busydata-native-client-stream").start(()->{
+            Thread sender=ioThread("busydata-native-client-stream",()->{
                 try {
                     for(;;) {
                         // Recheck after reading: auth OK is published before the client can
@@ -157,7 +169,7 @@ public final class NativeMysqlRelay implements AutoCloseable {
                     }
                     sending.complete(null);
                 } catch(Exception failure){sending.completeExceptionally(failure);fail(failure);}
-            });
+            });sendingThread=sender;sender.start();
             while(!authenticated) {
                 Packet packet=readPacket(fromServer);
                 boolean terminal=packet.bytes.length>0&&((packet.bytes[0]&255)==0||(packet.bytes[0]&255)==255);

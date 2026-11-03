@@ -143,6 +143,12 @@ TLS handshake and streams command bytes unchanged. Official clients, resolver
 imports and upstream binaries remain unmodified. Relay completion is checked
 before success acknowledgement; review/source ownership and unknown-outcome
 rules remain unchanged. See [native transport requirements](native_transport_acceptance.md).
+On Windows, each relay owns two daemon platform IO threads, bounded to four by
+the existing two-transfer admission limit. Closing the owned sockets releases
+both directions, including a partially received command. This uses public JDK
+interfaces with the pinned runtime, avoiding simultaneous virtual read/write
+pollers implicated by [OpenJDK JDK-8334574](https://github.com/openjdk/jdk/pull/33297).
+Linux retains virtual IO threads; payload, TLS and completion policy are unchanged.
 Native restore fences the shared persistent metadata source and retained
 editability evidence before client launch. Overlapping operations cannot publish
 fresh structure or bypass that editability barrier. An unknown external write

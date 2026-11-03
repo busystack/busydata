@@ -59,6 +59,31 @@ class NativeMysqlRelayTest {
         }
     }
 
+    @Test void closingAnAuthenticatedPartialCommandReleasesBothOwnedIoThreads()throws Exception {
+        try(var server=new ServerSocket(0,1,InetAddress.getLoopbackAddress());var relay=new NativeMysqlRelay(profile(TlsMode.DISABLED),server.getLocalPort(),SSLContext.getDefault(),NativeRelayFixture.WINDOWS)) {
+            var completion=new CompletableFuture<Void>();var commandStarted=new CountDownLatch(1);
+            Thread.ofVirtual().start(()->{try(var remote=server.accept()){
+                remote.setSoTimeout(5000);var in=remote.getInputStream();var out=remote.getOutputStream();packet(out,0,greeting(true));
+                packet(in,1);packet(out,2,new byte[]{0,0,0,2,0,0,0});
+                assertArrayEquals(new byte[]{0,0,4,0},in.readNBytes(4));assertEquals(3,in.read());commandStarted.countDown();
+                assertEquals(-1,in.read());completion.complete(null);
+            }catch(Throwable failure){completion.completeExceptionally(failure);commandStarted.countDown();}});
+            try(var socket=NativeRelayFixture.connect(endpoint(relay))) {
+                var in=Channels.newInputStream(socket);var out=Channels.newOutputStream(socket);
+                packet(in,0);byte[] auth=new byte[40];auth[1]=2;packet(out,1,auth);packet(in,2);
+                // Original command size, deliberately incomplete: sender waits
+                // for client bytes while receiver waits for the server reply.
+                out.write(new byte[]{0,0,4,0,3});out.flush();assertTrue(commandStarted.await(5,TimeUnit.SECONDS));
+                relay.close();assertEquals(-1,in.read());completion.get(5,TimeUnit.SECONDS);
+                for(String name:List.of("serving","sendingThread")) {
+                    var field=NativeMysqlRelay.class.getDeclaredField(name);field.setAccessible(true);Thread owned=(Thread)field.get(relay);
+                    assertNotNull(owned);assertEquals(!NativeRelayFixture.WINDOWS,owned.isVirtual());assertTrue(owned.isDaemon());
+                    owned.join(3000);assertFalse(owned.isAlive(),name+" retained after cancellation");
+                }
+            }
+        }
+    }
+
     @Test void closingAnUnconnectedOperationReleasesOnlyItsPrivateEndpoint()throws Exception {
         NativeMysqlRelay relay=new NativeMysqlRelay(profile(TlsMode.DISABLED),54321,SSLContext.getDefault(),NativeRelayFixture.WINDOWS);var builder=endpoint(relay);
         if(NativeRelayFixture.WINDOWS) {
