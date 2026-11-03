@@ -289,6 +289,9 @@ void main() {
         semantics.dispose();
         debugDisableShadows = true;
       },
+      // Like the Linux button golden, these reviewed pixels belong to the
+      // Linux font rasterizer. Native Windows/Fluent acceptance is separate.
+      skip: !Platform.isLinux,
     );
   }
 }

@@ -38,7 +38,9 @@ void main() {
     );
   });
   test('F12 CI and packaging use the approved common baseline', () {
-    final result = Process.runSync('python3', ['tool/check_toolchain.py']);
+    final result = Process.runSync(Platform.isWindows ? 'python' : 'python3', [
+      'tool/check_toolchain.py',
+    ]);
     expect(result.exitCode, 0, reason: '${result.stdout}\n${result.stderr}');
   });
 }

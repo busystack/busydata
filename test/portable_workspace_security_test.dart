@@ -6,6 +6,7 @@ import 'package:busydata/src/features/workspace/documents.dart';
 import 'package:busydata/src/features/workspace/workbench_model.dart';
 import 'package:busydata/src/platform/common/output_commit.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as p;
 
 Future<void> directoryAlias(String link, String target) async {
   if (Platform.isWindows) {
@@ -14,8 +15,8 @@ Future<void> directoryAlias(String link, String target) async {
       '/c',
       'mklink',
       '/J',
-      link,
-      target,
+      p.normalize(link),
+      p.normalize(target),
     ]);
     expect(
       result.exitCode,
@@ -474,8 +475,8 @@ void main() {
                       '/c',
                       'mklink',
                       '/J',
-                      nested.path,
-                      outside.path,
+                      p.normalize(nested.path),
+                      p.normalize(outside.path),
                     ]);
                     expect(
                       result.exitCode,

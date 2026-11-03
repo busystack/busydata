@@ -5,6 +5,7 @@ import 'package:busydata/src/platform/common/output_commit.dart';
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as p;
 
 void main() {
   test(
@@ -107,7 +108,7 @@ void main() {
         await save;
         expect(await original.readAsString(), 'SELECT 1;');
         expect(await target.readAsString(), 'SELECT 1;');
-        expect(document.path, target.path);
+        expect(document.path, p.normalize(target.path));
         expect(document.savedText, 'SELECT 1;');
         expect(document.dirty, isTrue);
       } finally {

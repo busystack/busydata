@@ -6,6 +6,7 @@ import 'package:busydata/src/features/workspace/documents.dart';
 import 'package:busydata/src/features/workspace/workbench_model.dart';
 import 'package:busydata/src/platform/common/output_commit.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as p;
 
 // A real sharing conflict at the Windows content-open boundary. Metadata
 // inspection and no-replace restoration remain permitted by share-delete.
@@ -270,7 +271,11 @@ void main() {
         expect(
           await root
               .list()
-              .where((f) => f.path.endsWith('.tmp') && f.path != partial.path)
+              .where(
+                (f) =>
+                    f.path.endsWith('.tmp') &&
+                    p.normalize(f.path) != p.normalize(partial.path),
+              )
               .length,
           0,
         );
@@ -343,7 +348,7 @@ void main() {
       }
       expect(failure.published, isFalse);
       expect(failure.cleanup, isNotNull);
-      expect(failure.partialPath, partial.path);
+      expect(failure.partialPath, p.normalize(partial.path));
       expect(
         OutputDestination.currentEntryToken(File(failure.recoveryPath!)),
         before,
@@ -394,8 +399,8 @@ void main() {
                       '/c',
                       'mklink',
                       '/J',
-                      backup.path,
-                      dir.path,
+                      p.normalize(backup.path),
+                      p.normalize(dir.path),
                     ]);
                     expect(
                       result.exitCode,
@@ -552,7 +557,7 @@ void main() {
       );
       expect(OutputDestination.currentEntryToken(target), displacedToken);
       if (kind == 'link') {
-        expect(await Link(target.path).target(), victim.path);
+        expect(await Link(target.path).target(), p.normalize(victim.path));
       } else if (kind == 'directory') {
         expect(await File('${target.path}/child').readAsString(), 'child');
       } else {
@@ -749,8 +754,8 @@ void main() {
                   '/c',
                   'mklink',
                   '/J',
-                  target.path,
-                  directory.path,
+                  p.normalize(target.path),
+                  p.normalize(directory.path),
                 ]);
                 expect(
                   result.exitCode,
@@ -820,7 +825,9 @@ void main() {
         await root
             .list()
             .where(
-              (file) => file.path.endsWith('.tmp') && file.path != partial.path,
+              (file) =>
+                  file.path.endsWith('.tmp') &&
+                  p.normalize(file.path) != p.normalize(partial.path),
             )
             .isEmpty,
         isTrue,

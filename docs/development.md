@@ -210,6 +210,9 @@ Windows builds target only x64 Windows 11 24H2 (26100+) with the corresponding
 SDK/Visual Studio requirements. Native single-instance tests are part of its
 build. Database CI requires Docker and pulls every matrix image; missing stages
 fail rather than becoming a passing skipped matrix. Testcontainers is test-only.
+Exact Linux button/workbench PNG baselines run on Linux, where their reviewed
+font rasterization applies. Windows records those platform skips explicitly;
+they do not certify or replace native Fluent presentation acceptance.
 
 Linux needs clang/cmake/ninja/pkg-config, libgtk-3-dev, libhandy-1-dev,
 libsecret-1-dev and liblzma-dev. Prepare the verified release bundle, then use
