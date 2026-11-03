@@ -12,6 +12,7 @@ import java.lang.invoke.MethodHandle;
 import java.nio.ByteOrder;
 import java.nio.file.Path;
 import java.nio.file.NoSuchFileException;
+import java.nio.file.FileAlreadyExistsException;
 import java.util.HexFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +26,7 @@ import java.util.List;
 final class WindowsOutputFiles implements AutoCloseable {
     private static final int FILE_SHARE_READ_WRITE = 3;
     private static final int FILE_SHARE_READ_WRITE_DELETE = 7;
+    private static final int FILE_TRAVERSE = 0x20;
     private static final int OPEN_EXISTING = 3;
     private static final int OPEN_DIRECTORY_NO_REPARSE = 0x02000000 | 0x00200000;
     private static final int FILE_ATTRIBUTE_DIRECTORY = 0x10;
@@ -128,7 +130,7 @@ final class WindowsOutputFiles implements AutoCloseable {
         try (Arena arena = Arena.ofConfined()) {
             MemorySegment state = arena.allocate(api.stateLayout);
             MemorySegment handle = (MemorySegment) api.create.invokeExact(state, wide(arena, directory),
-                0, FILE_SHARE_READ_WRITE, MemorySegment.NULL, OPEN_EXISTING,
+                FILE_TRAVERSE, FILE_SHARE_READ_WRITE, MemorySegment.NULL, OPEN_EXISTING,
                 OPEN_DIRECTORY_NO_REPARSE, MemorySegment.NULL);
             if (handle.address() == -1L || handle.address() == 0L)
                 throw nativeFailure("Lock output parent", error(state));
@@ -154,7 +156,12 @@ final class WindowsOutputFiles implements AutoCloseable {
             // fail rather than turning into a non-atomic copy/delete.
             int success = (int) api.move.invokeExact(state, wide(arena, source),
                 wide(arena, destination), MOVEFILE_WRITE_THROUGH);
-            if (success == 0) throw nativeFailure("Commit new output", error(state));
+            if (success == 0) {
+                int code = error(state);
+                if (code == 80 || code == 183)
+                    throw new FileAlreadyExistsException(destination.toString(), null, "Windows error " + code);
+                throw nativeFailure("Commit new output", code);
+            }
         } catch (IOException failure) { throw failure; }
         catch (Throwable failure) { throw invocationFailure(failure); }
     }
