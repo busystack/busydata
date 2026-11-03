@@ -192,42 +192,70 @@ void main() {
 
   for (final kind in ['link', 'directory', if (Platform.isLinux) 'fifo']) {
     test(
-      'native final open rejects substituted $kind before any SQL read',
+      'native final open prevents $kind substitution or rejects it before reading',
       () async {
         final f = await WorkspaceFixture.create();
-        var attempted = false, reads = 0;
+        final loaded = <SqlDocument>[];
+        var attempted = false, prevented = false, reads = 0;
+        Object? failure;
         try {
-          await expectLater(
-            PortableWorkspace.load(
-              f.manifest,
-              hook: (phase, reference) async {
-                if (reference != f.reference) return;
-                if (phase.startsWith('read-handle:')) reads++;
-                if (phase != 'before-final-open') return;
-                attempted = true;
-                await f.sql.rename('${f.sql.path}.held');
-                if (kind == 'directory') {
-                  await Directory(f.sql.path).create();
-                  await File('${f.sql.path}/child').writeAsString('retained');
-                } else if (kind == 'fifo') {
-                  final result = await Process.run('mkfifo', [f.sql.path]);
-                  expect(
-                    result.exitCode,
-                    0,
-                    reason: 'FIFO fixture unavailable',
-                  );
-                } else if (Platform.isWindows) {
-                  await directoryAlias(f.sql.path, f.outside.path);
-                } else {
-                  await Link(f.sql.path).create(f.secret.path);
-                }
-              },
-            ),
-            throwsA(anyOf(isA<FileSystemException>(), isA<FormatException>())),
-          );
+          // Establish that the ordinary fixture can rename this exact file
+          // before the native reader holds its directory/session handles.
+          final control = await f.sql.rename('${f.sql.path}.control');
+          await control.rename(f.sql.path);
+          try {
+            loaded.addAll(
+              await PortableWorkspace.load(
+                f.manifest,
+                hook: (phase, reference) async {
+                  if (reference != f.reference) return;
+                  if (phase.startsWith('read-handle:')) reads++;
+                  if (phase != 'before-final-open') return;
+                  attempted = true;
+                  try {
+                    await f.sql.rename('${f.sql.path}.held');
+                  } on FileSystemException catch (error) {
+                    expect(Platform.isWindows, isTrue);
+                    expect(error.osError?.errorCode, anyOf(5, 32, 33));
+                    prevented = true;
+                    return;
+                  }
+                  if (kind == 'directory') {
+                    await Directory(f.sql.path).create();
+                    await File('${f.sql.path}/child').writeAsString('retained');
+                  } else if (kind == 'fifo') {
+                    final result = await Process.run('mkfifo', [f.sql.path]);
+                    expect(
+                      result.exitCode,
+                      0,
+                      reason: 'FIFO fixture unavailable',
+                    );
+                  } else if (Platform.isWindows) {
+                    await directoryAlias(f.sql.path, f.outside.path);
+                  } else {
+                    await Link(f.sql.path).create(f.secret.path);
+                  }
+                },
+              ),
+            );
+          } on FileSystemException catch (error) {
+            failure = error;
+          } on FormatException catch (error) {
+            failure = error;
+          }
           expect(attempted, isTrue);
-          expect(reads, 0);
           expect(await f.secret.readAsString(), WorkspaceFixture.outsideBytes);
+          if (prevented) {
+            expect(failure, isNull);
+            expect(loaded, hasLength(1));
+            expect(loaded.single.editor.text, WorkspaceFixture.authorized);
+            expect(reads, greaterThan(0));
+            expect(await f.sql.readAsString(), WorkspaceFixture.authorized);
+            return;
+          }
+          expect(failure, isNotNull);
+          expect(loaded, isEmpty);
+          expect(reads, 0);
           expect(
             await File('${f.sql.path}.held').readAsString(),
             WorkspaceFixture.authorized,
@@ -239,6 +267,9 @@ void main() {
             );
           }
         } finally {
+          for (final document in loaded) {
+            document.dispose();
+          }
           await f.outer.delete(recursive: true);
         }
       },
@@ -650,7 +681,7 @@ void main() {
           'nested/deeper/query.sql',
         );
         loaded.addAll(await PortableWorkspace.load(workspace));
-        expect(loaded.single.path, sql.path);
+        expect(loaded.single.path, p.normalize(sql.path));
         expect(loaded.single.editor.text, document.editor.text);
         expect(loaded.single.dirty, isFalse);
       } finally {
