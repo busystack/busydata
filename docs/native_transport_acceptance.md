@@ -26,7 +26,9 @@ the parent, removes those variables before starting the official client, limits
 handle inheritance to standard streams, applies a current-user-only pipe ACL,
 rejects remote connections and competing first instances, verifies the actual
 pipe client PID, and owns a kill-on-close job. Reviewed Unicode arguments remain
-literal. Cancellation closes both relay ends and the owned child; it never
+literal. Separate overlapped connect/read/write operations use owned manual-reset
+events, permitting concurrent reads and writes on the private pipe. Cancellation
+drains pending operations before their events, buffers and pipe are released. Cancellation closes both relay ends and the owned child; it never
 changes host name-service registrations or other applications. Pre-existing
 endpoint options cannot replace the generated private transport, while an
 option-shaped database identifier after `--` remains literal data.
@@ -38,7 +40,7 @@ interrupted restore remains subject to unknown-outcome quarantine and is never
 replayed automatically. Review, exact session/source ownership and single-use
 approval checks precede execution.
 
-Native Windows CTest requires 25 cases: the 20 private-pipe cases plus five
+Native Windows CTest requires 26 cases: the 21 private-pipe cases plus five
 process/stdio/handle cases. They cover literal Unicode/quoted arguments, exact
 binary stdio, sequential/concurrent isolation, invalid or missing handoffs, failure
 propagation, launcher operation without a sibling DLL, and owned-child cleanup. Linux source

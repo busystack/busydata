@@ -17,6 +17,14 @@ int wmain(int argc,wchar_t **argv) {
   if(!WaitNamedPipeW(name,10000))return 4;
   HANDLE pipe=CreateFileW(name,GENERIC_READ|GENERIC_WRITE,0,NULL,OPEN_EXISTING,0,NULL);if(pipe==INVALID_HANDLE_VALUE)return 5;
   if(wcscmp(argv[2],L"--child-hold")==0){printf("%lu\n",GetCurrentProcessId());fflush(stdout);Sleep(60000);return 0;}
+  if(wcscmp(argv[2],L"--child-wait-read")==0){
+    printf("%lu\n",GetCurrentProcessId());fflush(stdout);
+    unsigned char byte=3;DWORD count;
+    if(!WriteFile(pipe,&byte,1,&count,NULL)||count!=1)return 24;
+    BOOL read=ReadFile(pipe,&byte,1,&count,NULL);DWORD error=read?ERROR_SUCCESS:GetLastError();
+    CloseHandle(pipe);
+    return (read&&count==0)||(!read&&(error==ERROR_BROKEN_PIPE||error==ERROR_PIPE_NOT_CONNECTED||error==ERROR_NO_DATA))?23:24;
+  }
   unsigned char sent[8192],received[8192];for(size_t i=0;i<sizeof(sent);i++)sent[i]=(unsigned char)i;
   for(int round=0;round<128;round++) {
     DWORD count;if(!WriteFile(pipe,sent,sizeof(sent),&count,NULL)||count!=sizeof(sent))return 10;

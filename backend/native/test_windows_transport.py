@@ -25,7 +25,9 @@ kernel.WaitForSingleObject.restype = wintypes.DWORD
 kernel.CloseHandle.argtypes = [wintypes.HANDLE]
 
 class Bridge:
-    def __init__(self):
+    def __init__(self, echo=True):
+        self.echo = echo
+        self.received = threading.Event()
         self.socket = socket.socket()
         self.socket.bind(('127.0.0.1', 0))
         self.socket.listen(1)
@@ -56,7 +58,8 @@ class Bridge:
                     chunk = connection.recv(65536)
                     if not chunk: break
                     count += len(chunk)
-                    connection.sendall(chunk)
+                    self.received.set()
+                    if self.echo: connection.sendall(chunk)
                 self.finished.set_result(count)
         except BaseException as failure:
             self.finished.set_exception(failure)
@@ -138,6 +141,27 @@ class NativePipeTransport(unittest.TestCase):
             self.assertEqual(0, kernel.WaitForSingleObject(child, 5000))
         finally:
             if process and process.poll() is None: process.kill(); process.wait(timeout=5)
+            if process and process.stdout: process.stdout.close()
+            if child: kernel.CloseHandle(child)
+            bridge.close()
+
+    def test_server_disconnect_unblocks_pending_pipe_read_and_preserves_client_failure(self):
+        bridge = Bridge(echo=False); process = None; child = None
+        try:
+            process = subprocess.Popen(bridge.command('--child-wait-read'), env=bridge.environment,
+                stdout=subprocess.PIPE, text=True)
+            lines = queue.Queue(maxsize=1)
+            threading.Thread(target=lambda: lines.put(process.stdout.readline()), daemon=True).start()
+            child = kernel.OpenProcess(0x00100000, False, int(lines.get(timeout=15)))
+            self.assertTrue(child)
+            self.assertTrue(bridge.received.wait(timeout=5), 'Client request did not reach the owned bridge')
+            self.assertEqual(0x102, kernel.WaitForSingleObject(child, 0))
+            bridge.connection.shutdown(socket.SHUT_RDWR)
+            self.assertEqual(23, process.wait(timeout=5), 'Transport EOF must preserve the selected client failure')
+            self.assertEqual(0, kernel.WaitForSingleObject(child, 0))
+        finally:
+            if process and process.poll() is None: process.kill(); process.wait(timeout=5)
+            if process and process.stdout: process.stdout.close()
             if child: kernel.CloseHandle(child)
             bridge.close()
 
