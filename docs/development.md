@@ -215,6 +215,31 @@ font rasterization applies. Windows records its complete selected file list and
 the four Linux-only renderer files in `build/windows-flutter-test-scope.json`.
 The Windows suite still rejects skipped tests; the full Linux suite executes the
 renderer cases. This scope does not certify native Fluent presentation acceptance.
+
+Native Windows window checks run against the ordinary release and its exact
+`build/windows-release-build.json` receipt. Before moving or resizing a fresh
+normal window, run `tool/windows/verify_initial_window_bounds.ps1` with
+`-ApplicationPid`, `-ExpectedExecutable`, `-BuildEvidencePath`,
+`-ExpectedSourceSha256`, `-SourceRevision` and `-OutputPath`. The script reads the
+actual visible frame and monitor work area in physical coordinates, requires an
+unminimized, unmaximized window within that area, and verifies restoration of its
+calling thread's temporary coordinate context. The runner constrains its initial
+size and position to that monitor's usable area; the display configuration is
+unchanged.
+
+Native close acceptance uses one already-running verified release process with
+at least one unsaved literal SQL document and no pending work. Run the
+Windows-provided `powershell.exe -NoProfile -NonInteractive -ExecutionPolicy
+Bypass -File tool/windows/verify_reviewed_close.ps1` with the same identity/report
+parameters and `-ExpectedUnsavedDocuments <count>`. It verifies the exact built
+code/runtime hashes, sends one native close request, checks the safe draft-saving
+review, approves once, and requires both the application and its one owned
+backend to exit normally with code zero. A repeated review fails and leaves the
+application open for inspection. The test never retries an approval or force-stops
+the application. Verify the saved drafts on a normal relaunch separately.
+BusyData's native runner owns this review before Flutter's framework close
+delegate; all other window messages retain their normal dispatch.
+
 The Windows procedure builds/tests BusyData's file-call DLL before Flutter tests.
 Its tiny Win32 wrappers capture each return value and error in the same native
 call, before Dart runtime work can change thread-local `GetLastError`. Standalone

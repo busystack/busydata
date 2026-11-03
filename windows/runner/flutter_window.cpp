@@ -189,6 +189,19 @@ LRESULT
 FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
                               WPARAM const wparam,
                               LPARAM const lparam) noexcept {
+  // BusyData owns the one review for a native close. Flutter's lifecycle
+  // delegate otherwise approves and re-dispatches WM_CLOSE before reaching this
+  // runner, which would ask for the same dirty-document review a second time.
+  // A quit acknowledged by Dart has already saved recovery and closed the
+  // backend; finish that native close without requesting another app exit.
+  if (message == WM_CLOSE && desktop_channel_) {
+    if (!quit_requested_) {
+      desktop_channel_->InvokeMethod("requestClose", nullptr);
+      return 0;
+    }
+    return Win32Window::MessageHandler(hwnd, message, wparam, lparam);
+  }
+
   // Give Flutter, including plugins, an opportunity to handle window messages.
   if (flutter_controller_) {
     std::optional<LRESULT> result =
@@ -200,12 +213,6 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
   }
 
   switch (message) {
-    case WM_CLOSE:
-      if (!quit_requested_ && desktop_channel_) {
-        desktop_channel_->InvokeMethod("requestClose", nullptr);
-        return 0;
-      }
-      break;
     case WM_GETMINMAXINFO: {
       const UINT dpi = GetDpiForWindow(hwnd);
       auto* sizing = reinterpret_cast<MINMAXINFO*>(lparam);
