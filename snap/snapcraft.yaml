@@ -49,24 +49,27 @@ parts:
   native-postgresql-client:
     plugin: nil
     source: https://ftp.postgresql.org/pub/source/v17.11/postgresql-17.11.tar.bz2
+    source-type: file
     source-checksum: sha256/dd27f2b3c59e73ed14aa3324901242bf69a032a6347805f274e6260322d42979
     build-packages: [python3, perl, gcc, make, bison, flex, pkg-config, libssl-dev, zlib1g-dev]
     stage-packages: [libssl3t64, zlib1g]
     override-build: |
-      python3 "$CRAFT_PROJECT_DIR/tool/build_snap_native_clients.py" postgresql --source "$CRAFT_PART_SRC" --build "$CRAFT_PART_BUILD/clients" --install "$CRAFT_PART_INSTALL"
+      python3 "$CRAFT_PROJECT_DIR/tool/build_snap_native_clients.py" postgresql --archive "$CRAFT_PART_SRC/postgresql-17.11.tar.bz2" --build "$CRAFT_PART_BUILD/clients" --install "$CRAFT_PART_INSTALL"
   native-mysql-client:
     plugin: nil
     source: https://cdn.mysql.com/Downloads/MySQL-8.4/mysql-8.4.10.tar.gz
+    source-type: file
     source-checksum: sha256/d57a6730baef14ae118f7f4a6e02845b5b50933758df61fb06e104f27ccc8f96
     build-packages: [python3, perl, cmake, gcc, g++, make, bison, flex, pkg-config, libssl-dev, zlib1g-dev, libzstd-dev, libncurses-dev, liblz4-dev, libicu-dev, libtirpc-dev]
     stage-packages: [libssl3t64, zlib1g, libzstd1, libncursesw6, libtinfo6, liblz4-1, libicu74, libtirpc3t64]
     override-build: |
-      python3 "$CRAFT_PROJECT_DIR/tool/build_snap_native_clients.py" mysql --source "$CRAFT_PART_SRC" --build "$CRAFT_PART_BUILD/clients" --install "$CRAFT_PART_INSTALL"
+      python3 "$CRAFT_PROJECT_DIR/tool/build_snap_native_clients.py" mysql --archive "$CRAFT_PART_SRC/mysql-8.4.10.tar.gz" --build "$CRAFT_PART_BUILD/clients" --install "$CRAFT_PART_INSTALL"
   native-mariadb-client:
     plugin: nil
     source: https://archive.mariadb.org/mariadb-11.8.9/source/mariadb-11.8.9.tar.gz
+    source-type: file
     source-checksum: sha256/2e015b7e91004142eda8b3a20d3ceb875cf2ae55e72603e7222cd497d4e56fc6
     build-packages: [python3, perl, cmake, gcc, g++, make, bison, flex, pkg-config, libssl-dev, zlib1g-dev, libzstd-dev, libncurses-dev]
     stage-packages: [libssl3t64, zlib1g, libzstd1, libncursesw6, libtinfo6]
     override-build: |
-      python3 "$CRAFT_PROJECT_DIR/tool/build_snap_native_clients.py" mariadb --source "$CRAFT_PART_SRC" --build "$CRAFT_PART_BUILD/clients" --install "$CRAFT_PART_INSTALL"
+      python3 "$CRAFT_PROJECT_DIR/tool/build_snap_native_clients.py" mariadb --archive "$CRAFT_PART_SRC/mariadb-11.8.9.tar.gz" --build "$CRAFT_PART_BUILD/clients" --install "$CRAFT_PART_INSTALL"
