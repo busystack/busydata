@@ -212,12 +212,12 @@ def run(stage, argv, reports=(), artifacts=(), root=ROOT):
     finally:
         if drain is not None:
             record['logRetention'] = drain.finish()
-            record['logRetention']['file'] = str(log_path.relative_to(root))
+            record['logRetention']['file'] = log_path.relative_to(root).as_posix()
             if not record['logRetention']['complete']:
                 record.update(status='failed', reason='Required stage log exceeded its 32MiB budget or could not be drained completely')
     record['finishedUtc'] = utc()
     record['durationSeconds'] = time.time() - started
-    record['log'] = str((destination / 'command.log').relative_to(root))
+    record['log'] = (destination / 'command.log').relative_to(root).as_posix()
     record['logSha256'] = digest(destination / 'command.log')
     record['reports'] = []
     missing_reports = []
@@ -227,7 +227,7 @@ def run(stage, argv, reports=(), artifacts=(), root=ROOT):
             shutil.copytree(source, destination / source.name)
             entries = xml_reports(destination / source.name)
             for entry in entries:
-                entry['retained'] = str((destination / source.name / entry['file']).relative_to(root))
+                entry['retained'] = (destination / source.name / entry['file']).relative_to(root).as_posix()
             record['reports'].extend(entries)
             if not entries: missing_reports.append(relative)
         else:
@@ -257,7 +257,7 @@ def run(stage, argv, reports=(), artifacts=(), root=ROOT):
             retained = destination / 'artifacts' / relative
             retained.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(artifact, retained)
-            record['artifacts'].append({'file': relative, 'retained': str(retained.relative_to(root)),
+            record['artifacts'].append({'file': relative, 'retained': retained.relative_to(root).as_posix(),
                                         'bytes': artifact.stat().st_size, 'sha256': digest(artifact)})
             if record['status'] == 'passed':
                 try:

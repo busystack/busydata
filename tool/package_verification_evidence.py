@@ -237,8 +237,8 @@ def package(run_id, root=ROOT, historical=False):
         total += size
         files[key] = {'sha256': value, 'bytes': size}
 
-    retain(record_path.relative_to(root))
-    retain((run / 'manifest.json').relative_to(root))
+    retain(record_path.relative_to(root).as_posix())
+    retain((run / 'manifest.json').relative_to(root).as_posix())
     for artifact in record['sourceSnapshot'].values():
         if isinstance(artifact, dict) and 'file' in artifact:
             retain(artifact['file'], artifact['sha256'], expected_bytes=artifact['bytes'])
@@ -456,7 +456,7 @@ def finish_with_archive(required, root=ROOT):
         archive = package(record['runId'], root,
                           historical=record['buildSourceSha256'] != record['currentBuildSourceSha256'])
         atomic_json(root / 'build/verification-archive.json', {
-            'runId': record['runId'], 'file': str(archive.relative_to(root)),
+            'runId': record['runId'], 'file': archive.relative_to(root).as_posix(),
             'bytes': archive.stat().st_size, 'sha256': digest(archive),
             'recordedAcceptancePassed': record['acceptancePassed'],
         })

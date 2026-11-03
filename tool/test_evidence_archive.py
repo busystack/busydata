@@ -11,6 +11,7 @@ from unittest.mock import patch
 
 from package_verification_evidence import package, finish_with_archive, verify_evidence_archive, native_references, native_relative
 from native_platform_matrix import CASES
+from canonical_source import normalized_path
 from verification_evidence import start, run, finish, unavailable, manifest_path, source_hash, digest
 
 
@@ -62,6 +63,42 @@ class EvidenceArchiveTest(unittest.TestCase):
             record = json.load(content.extractfile(name))
             self.assertEqual('unavailable', record['stages']['windows']['status'])
             self.assertEqual('not-run', record['stages']['not-executed']['status'])
+
+    def test_completed_archive_uses_canonical_paths_for_every_reference(self):
+        self.stage()
+        run('artifact', [sys.executable, '-c',
+                         "from pathlib import Path;Path('build/result.json').write_text('{}')"],
+            artifacts=['build/result.json'], root=self.root)
+        record = finish_with_archive(['java', 'artifact'], self.root)
+        self.assertTrue(record['acceptancePassed'], record['acceptanceFailures'])
+        receipt = json.loads((self.root / 'build/verification-archive.json').read_text())
+        self.assertEqual(receipt['file'], normalized_path(receipt['file']))
+        collection = verify_evidence_archive(self.root / receipt['file'])
+        references = [receipt['file'], *collection['files']]
+        for stage in record['stages'].values():
+            references.extend([stage['log'], stage['logRetention']['file']])
+            references.extend(entry['retained'] for entry in
+                              [*stage['reports'], *stage['artifacts']])
+        for relative in references:
+            self.assertIsInstance(relative, str)
+            self.assertEqual(relative, normalized_path(relative))
+        self.assertTrue(any(name.endswith('/TEST-current.xml') for name in references))
+        self.assertTrue(any(name.endswith('/artifacts/build/result.json') for name in references))
+
+    def test_archive_rejects_noncanonical_record_paths_without_normalizing_them(self):
+        self.stage()
+        record = finish(['java'], self.root)
+        manifest = json.loads(manifest_path(self.root).read_text())
+        original = record['stages']['java']['log']
+        for invalid in (original.replace('/', '\\'), '../' + original,
+                        '/' + original, original.replace('/java/', '/./java/')):
+            with self.subTest(path=invalid):
+                record['stages']['java']['log'] = invalid
+                manifest['stages']['java']['log'] = invalid
+                manifest_path(self.root).write_text(json.dumps(manifest))
+                (manifest_path(self.root).parent / 'verification-evidence.json').write_text(json.dumps(record))
+                with self.assertRaisesRegex(ValueError, 'paths|path'):
+                    package(self.run_id, self.root)
 
     def test_modified_logs_and_reports_cannot_be_packaged(self):
         self.stage();finish(['java'], self.root)
