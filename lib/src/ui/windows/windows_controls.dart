@@ -161,6 +161,32 @@ class _WindowsMenuBar extends StatefulWidget {
 
 class _WindowsMenuBarState extends State<_WindowsMenuBar> {
   final menuBar = GlobalKey<MenuBarState>();
+  // Fluent associates controllers and opening animations with root item identity.
+  // Keep those roots through ordinary workbench rebuilds; resolve live commands
+  // from the current widget when each popup is constructed.
+  final rootItems = <int, MenuBarItem>{};
+
+  MenuBarItem rootItem(int index) {
+    final title = widget.menus[index].label;
+    final existing = rootItems[index];
+    if (existing != null && existing.title == title) return existing;
+    return rootItems[index] = MenuBarItem(
+      title: title,
+      items: [
+        MenuFlyoutItemBuilder(
+          builder: (_) => Builder(
+            builder: (context) {
+              if (index >= widget.menus.length ||
+                  widget.menus[index].label != title) {
+                return const SizedBox.shrink();
+              }
+              return _menuBarGroup(context, items(widget.menus[index]));
+            },
+          ),
+        ),
+      ],
+    );
+  }
 
   List<MenuFlyoutItemBase> items(DesktopMenu menu) => [
     for (final action in menu.actions)
@@ -189,26 +215,20 @@ class _WindowsMenuBarState extends State<_WindowsMenuBar> {
   ];
 
   @override
-  Widget build(BuildContext context) => _menuScope(
-    MenuBar(
-      key: menuBar,
-      overflowBehavior: MenuBarOverflowBehavior.scroll,
-      items: [
-        for (final menu in widget.menus)
-          MenuBarItem(
-            title: menu.label,
-            items: [
-              MenuFlyoutItemBuilder(
-                builder: (_) => Builder(
-                  builder: (context) => _menuBarGroup(context, items(menu)),
-                ),
-              ),
-            ],
-          ),
-      ],
-    ),
-    bar: true,
-  );
+  Widget build(BuildContext context) {
+    rootItems.removeWhere((index, _) => index >= widget.menus.length);
+    return _menuScope(
+      MenuBar(
+        key: menuBar,
+        overflowBehavior: MenuBarOverflowBehavior.scroll,
+        items: [
+          for (var index = 0; index < widget.menus.length; index++)
+            rootItem(index),
+        ],
+      ),
+      bar: true,
+    );
+  }
 }
 
 class WindowsControls extends DesktopControls {
