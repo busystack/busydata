@@ -37,6 +37,14 @@ class NativeMysqlRelayTest {
                 var input=Channels.newInputStream(socket);var output=Channels.newOutputStream(socket);
                 assertEquals(0,packet(input,0)[17]&8);byte[] auth=new byte[40];auth[1]=2;packet(output,1,auth);assertEquals(0,packet(input,2)[0]);
                 packet(output,0,command);assertArrayEquals(new byte[]{0,42,0,(byte)255},packet(input,1));
+            } catch(Throwable failure) {
+                // A peer failure can close the client first. Retain both the
+                // fixture's original cause and the relay failure alongside EOF.
+                try { completion.get(5,TimeUnit.SECONDS); }
+                catch(Throwable serverFailure) { failure.addSuppressed(serverFailure); }
+                try { relay.check(); }
+                catch(Throwable relayFailure) { failure.addSuppressed(relayFailure); }
+                throw failure;
             }
             completion.get(5,TimeUnit.SECONDS);relay.check();
         }
