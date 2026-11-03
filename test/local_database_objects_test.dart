@@ -424,8 +424,9 @@ void main() {
           try {
             await traced.recoverNow();
           } finally {
-            if (moved && await destination.exists())
+            if (moved && await destination.exists()) {
               await destination.delete(recursive: true);
+            }
             if (await root.exists()) await root.delete(recursive: true);
           }
         }

@@ -173,9 +173,14 @@ class WindowsWorkspaceShell extends StatelessWidget {
                     excluding: !model.explorerVisible,
                     child: SizedBox(
                       width: model.explorerWidth,
-                      child: DatabaseExplorer(
-                        model: model,
-                        controls: const WindowsControls(),
+                      child: Semantics(
+                        container: true,
+                        explicitChildNodes: true,
+                        identifier: 'busydata.windows.explorer',
+                        child: DatabaseExplorer(
+                          model: model,
+                          controls: const WindowsControls(),
+                        ),
                       ),
                     ),
                   ),
@@ -196,9 +201,14 @@ class WindowsWorkspaceShell extends StatelessWidget {
                     ),
                   ),
                 Expanded(
-                  child: WorkbenchView(
-                    model: model,
-                    controls: const WindowsControls(),
+                  child: Semantics(
+                    container: true,
+                    explicitChildNodes: true,
+                    identifier: 'busydata.windows.workbench',
+                    child: WorkbenchView(
+                      model: model,
+                      controls: const WindowsControls(),
+                    ),
                   ),
                 ),
               ],

@@ -227,6 +227,14 @@ calling thread's temporary coordinate context. The runner constrains its initial
 size and position to that monitor's usable area; the display configuration is
 unchanged.
 
+The Windows shell gives Explorer and the workbench separate, stable semantic
+pane containers. Shared search can add focused siblings and move the document
+layout without merging either pane into the common semantic root. The widget
+regression preserves pane ancestry, editor identity and the captured keyboard
+focus through search transitions. Native acceptance must also observe current
+controls and geometry after menu and keyboard transitions, with no rejected
+AXTree updates from the unchanged Windows engine.
+
 Native close acceptance uses one already-running verified release process with
 at least one unsaved literal SQL document and no pending work. Run the
 Windows-provided `powershell.exe -NoProfile -NonInteractive -ExecutionPolicy
