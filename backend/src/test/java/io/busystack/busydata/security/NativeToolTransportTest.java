@@ -81,19 +81,28 @@ class NativeToolTransportTest {
         assertThrows(java.io.IOException.class,()->new NativeToolTransport(root,"Windows 11").forward(builder,profile,54321,SSLContext.getDefault()));
         assertEquals(before,builder.command());
     }
-    @Test void linuxPrivateSocketNeedsNoLoaderInterposition()throws Exception{
+    @Test void platformPrivateEndpointNeedsNoLoaderInterposition()throws Exception{
         var profile=selected(Engine.MYSQL,TlsMode.VERIFY_FULL);var builder=command(profile);NativeToolTransport.sanitize(builder);
-        Path endpoint;
-        try(var relay=new NativeToolTransport(root,"Linux").forward(builder,profile,54321,SSLContext.getDefault())){
-            assertEquals("selected-client.exe",builder.command().getFirst());
-            assertTrue(builder.command().contains("--protocol=SOCKET"));
-            assertTrue(builder.command().contains("--host=localhost"));
-            endpoint=Path.of(builder.command().stream().filter(value->value.startsWith("--socket=")).findFirst().orElseThrow().substring(9));
-            assertTrue(Files.exists(endpoint));assertEquals("rwx------",java.nio.file.attribute.PosixFilePermissions.toString(Files.getPosixFilePermissions(endpoint.getParent())));
+        Path endpoint=null;var transport=NativeRelayFixture.WINDOWS?windows():new NativeToolTransport(root,"Linux");
+        try(var relay=transport.forward(builder,profile,54321,SSLContext.getDefault())){
+            assertEquals("selected-client.exe",builder.command().get(NativeRelayFixture.WINDOWS?1:0));
+            assertTrue(builder.command().contains("--protocol="+(NativeRelayFixture.WINDOWS?"PIPE":"SOCKET")));
+            assertTrue(builder.command().contains("--host="+(NativeRelayFixture.WINDOWS?".":"localhost")));
+            if(NativeRelayFixture.WINDOWS) {
+                assertEquals(root.resolve("busydata_tool_launcher.exe").toString(),builder.command().getFirst());
+                assertTrue(NativeRelayFixture.endpoint(builder).startsWith("BusyData.Native."));
+                assertEquals(32,java.util.HexFormat.of().parseHex(builder.environment().get("BUSYDATA_NATIVE_TOKEN")).length);
+            } else {
+                endpoint=Path.of(NativeRelayFixture.endpoint(builder));
+                assertTrue(Files.exists(endpoint));assertEquals("rwx------",java.nio.file.attribute.PosixFilePermissions.toString(Files.getPosixFilePermissions(endpoint.getParent())));
+            }
             assertEquals("--host=literal-database",builder.command().getLast());
             assertFalse(builder.environment().containsKey("BUSYDATA_FORWARD_HOST"));assertFalse(builder.environment().containsKey("LD_PRELOAD"));
         }
-        assertFalse(Files.exists(endpoint.getParent()));
+        if(NativeRelayFixture.WINDOWS) {
+            int port=Integer.parseInt(builder.environment().get("BUSYDATA_NATIVE_PORT"));
+            assertThrows(java.net.ConnectException.class,()->{try(var socket=new java.net.Socket("127.0.0.1",port)){fail("Closed relay accepted a connection");}});
+        } else assertFalse(Files.exists(endpoint.getParent()));
     }
     @Test void inheritedForwardingControlsAreRemovedBeforeOwnedRouting(){
         var builder=new ProcessBuilder("selected-client.exe");

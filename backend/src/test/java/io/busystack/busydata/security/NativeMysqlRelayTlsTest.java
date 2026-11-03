@@ -45,7 +45,7 @@ class NativeMysqlRelayTlsTest {
         var selected=Tls.newBuilder().setMode(mode).setJavaTrust(false).setSystemTrust(false).setCaFile(pem("roots.pem",wrongRoot?identity("Wrong CA",null,true,false).certificate:ca.certificate).toString());
         if(mutual)selected.setClientCert(pem("client.pem",clientIdentity.certificate).toString()).setClientKey(pem("client-key.pem",clientIdentity.key.getPrivate()).toString());
         Profile profile=Profile.newBuilder().setEngine(Engine.MYSQL).setHost(host).setPort(3306).setTls(selected).build();SSLContext context=serverContext(serverIdentity,ca);
-        try(var scratch=new PrivateTemporaryFiles(root.resolve("private"));var material=new JdbcTlsMaterial(scratch);var server=new ServerSocket(0,1,InetAddress.getLoopbackAddress());var relay=new NativeMysqlRelay(profile,server.getLocalPort(),material.nativeContext(profile,material.nativeRoots(profile)),false)) {
+        try(var scratch=new PrivateTemporaryFiles(root.resolve("private"));var material=new JdbcTlsMaterial(scratch);var server=new ServerSocket(0,1,InetAddress.getLoopbackAddress());var relay=new NativeMysqlRelay(profile,server.getLocalPort(),material.nativeContext(profile,material.nativeRoots(profile)),NativeRelayFixture.WINDOWS)) {
             var result=new CompletableFuture<Void>();
             Thread.ofVirtual().start(()->{try(var remote=server.accept()) {
                 remote.setSoTimeout(5000);byte[] greeting=new byte[60];greeting[0]=10;greeting[1]='8';greeting[16]=2;greeting[17]=8;packet(remote.getOutputStream(),0,greeting);
@@ -61,8 +61,8 @@ class NativeMysqlRelayTlsTest {
                     result.complete(null);
                 }
             }catch(Throwable failure){result.completeExceptionally(failure);}});
-            var builder=new ProcessBuilder("native","--defaults-file=/reviewed.cnf");relay.configure(builder,root);String path=builder.command().stream().filter(s->s.startsWith("--socket=")).findFirst().orElseThrow().substring(9);
-            try(var local=SocketChannel.open(UnixDomainSocketAddress.of(path))) {
+            NativeRelayFixture.launcher(root);var builder=new ProcessBuilder("native","--defaults-file=/reviewed.cnf");relay.configure(builder,root);
+            try(var local=NativeRelayFixture.connect(builder)) {
                 var in=Channels.newInputStream(local);var out=Channels.newOutputStream(local);assertEquals(0,packet(in,0)[17]&8);byte[] auth=new byte[40];auth[1]=2;packet(out,1,auth);
                 if(success) {assertArrayEquals(new byte[]{1,7},packet(in,2));assertArrayEquals(new byte[]{1,8},packet(in,3));packet(out,4,new byte[]{42,43});assertEquals(0,packet(in,5)[0]);packet(out,0,new byte[]{3,0,(byte)255,10});assertArrayEquals(new byte[]{0,99},packet(in,1));}
                 else assertEquals(-1,in.read(),"Certificate failure must disconnect before native credentials reach the server");

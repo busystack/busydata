@@ -25,12 +25,17 @@ class SelectedMaterialTest {
   builder.addExtension(org.bouncycastle.asn1.x509.Extension.basicConstraints,true,new org.bouncycastle.asn1.x509.BasicConstraints(true));
   var certificate=new org.bouncycastle.cert.jcajce.JcaX509CertificateConverter().getCertificate(builder.build(new org.bouncycastle.operator.jcajce.JcaContentSignerBuilder("SHA256withRSA").build(pair.getPrivate())));
   try(var writer=new org.bouncycastle.openssl.jcajce.JcaPEMWriter(Files.newBufferedWriter(source))){writer.writeObject(certificate);}
-  String original=Files.readString(source);
   try(var scratch=new PrivateTemporaryFiles(root.resolve("scratch"))) {
    var material=new JdbcTlsMaterial(scratch);var properties=new Properties();
    material.configure(Profile.newBuilder().setEngine(Engine.POSTGRESQL).setTls(Tls.newBuilder().setCaFile(source.toString()).setMode(TlsMode.VERIFY_FULL)).build(),properties);
    Path copied=Path.of(properties.getProperty("sslrootcert"));assertNotEquals(source,copied);
-   Files.writeString(source,"replacement CA");assertEquals(original,Files.readString(copied));
+   byte[] reviewed=Files.readAllBytes(copied);
+   assertFalse(new String(reviewed,java.nio.charset.StandardCharsets.US_ASCII).contains("\r"),"Owned certificate bundles use canonical LF on both platforms");
+   Files.writeString(source,"replacement CA");assertArrayEquals(reviewed,Files.readAllBytes(copied));
+   try(var input=Files.newInputStream(copied)) {
+    var retained=java.security.cert.CertificateFactory.getInstance("X.509").generateCertificates(input);
+    assertEquals(1,retained.size());assertArrayEquals(certificate.getEncoded(),retained.iterator().next().getEncoded());
+   }
    material.close();material.close();assertFalse(Files.exists(copied));assertEquals("replacement CA",Files.readString(source));
   }
  }
