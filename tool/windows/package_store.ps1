@@ -17,6 +17,11 @@ $staging=Join-Path $output ('staging-'+[guid]::NewGuid())
 New-Item -ItemType Directory $staging | Out-Null
 Copy-Item "$ReleasePath/*" $staging -Recurse
 Get-ChildItem $staging -Filter '*.pdb' -Recurse | Remove-Item
+# Generated native test and linker diagnostics are not application payload.
+foreach ($relative in @('busydata_runner_native_test.exe','backend/jlink.log')) {
+  $buildOnly=Join-Path $staging $relative
+  if (Test-Path -LiteralPath $buildOnly -PathType Leaf) { Remove-Item -LiteralPath $buildOnly }
+}
 Copy-BusyDataVCRuntime -VisualStudioPath $environment.VisualStudio -Destination $staging
 New-Item -ItemType Directory (Join-Path $staging 'Assets') | Out-Null
 foreach ($asset in @('StoreLogo.png','Square44x44Logo.png','Square150x150Logo.png')) {

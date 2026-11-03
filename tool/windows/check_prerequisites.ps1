@@ -53,16 +53,16 @@ if (-not (Test-Path -LiteralPath $vswhere)) {
   throw 'Visual Studio 2022 with Desktop development with C++ is required.'
 }
 $visualStudio = & $vswhere -latest -products * `
-  -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 `
+  -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 Microsoft.VisualStudio.Component.VC.ATL `
   -property installationPath
 if ([string]::IsNullOrWhiteSpace($visualStudio)) {
-  throw 'Visual Studio C++ x64 desktop tools were not found.'
+  throw 'Visual Studio C++ x64 desktop tools with matching ATL were not found.'
 }
 $visualStudioVersion = & $vswhere -latest -products * `
-  -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 `
+  -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 Microsoft.VisualStudio.Component.VC.ATL `
   -property installationVersion
 $visualStudioDisplayName = & $vswhere -latest -products * `
-  -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 `
+  -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 Microsoft.VisualStudio.Component.VC.ATL `
   -property displayName
 $kitsBin = Join-Path ${env:ProgramFiles(x86)} 'Windows Kits\10\bin'
 $sdk = Get-BusyDataWindowsSdkDirectory -KitsBin $kitsBin
