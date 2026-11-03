@@ -1605,9 +1605,92 @@ def focused_native_action(Atspi, current_action, wait):
     return wait(focused_action)
 
 
+def focused_fluent_menu_action(Atspi, current_action, wait):
+    """Read the owned focus reply before reacquiring its transient menu."""
+    root = owner = pending_sequence = None
+    reacquisitions = 0
+
+    def number(attributes, name):
+        value = attributes.get('busydata-' + name)
+        if not isinstance(value, str) or not re.fullmatch(r'[0-9]{1,20}', value) or int(value) >= 2 ** 64:
+            raise RuntimeError('Invalid Fluent focus receipt counter')
+        return int(value)
+
+    def identity(node, attributes):
+        process, path = node.get_process_id(), node.path
+        if (type(process) is not int or not 0 < process < 2 ** 31 or
+                not isinstance(path, str) or not path.startswith('/') or len(path) > 4096):
+            raise RuntimeError('Invalid Fluent focus receipt owner')
+        return (process, path, number(attributes, 'bridge-epoch'), number(attributes, 'owner-epoch'))
+
+    def observe():
+        nonlocal root, owner, pending_sequence, reacquisitions
+        action = None
+        if root is None:
+            action = current_action()
+            if action is None:
+                return None
+            roots = []
+            for node in accessible_ancestors(action[0]):
+                if node.get_role() != Atspi.Role.PANEL:
+                    continue
+                attributes = node.get_attributes()
+                if isinstance(attributes, dict) and 'busydata-status' in attributes:
+                    roots.append((node, dict(attributes)))
+            if len(roots) != 1:
+                raise RuntimeError('Fluent focus receipt owner unavailable')
+            root, attributes = roots[0]
+            owner = identity(root, attributes)
+        else:
+            root.clear_cache()
+            attributes = root.get_attributes()
+            if identity(root, attributes) != owner:
+                raise RuntimeError('Fluent focus destination owner changed')
+        if attributes.get('busydata-status') != 'ok':
+            return None
+        sequence = number(attributes, 'action-sequence')
+        status = None
+        if pending_sequence is not None:
+            if sequence < pending_sequence:
+                return None
+            if sequence != pending_sequence or attributes.get('busydata-action-name') != 'focus':
+                raise RuntimeError('Fluent focus receipt belongs to an intervening native action')
+            status = attributes.get('busydata-action-status')
+            if status == 'pending':
+                return None
+            if (status not in ('stale', 'ok') or number(attributes, 'action-bridge-epoch') != owner[2] or
+                    number(attributes, 'action-owner-epoch') != owner[3]):
+                raise RuntimeError('Fluent focus receipt is not a same-owner revision refusal')
+            if status == 'stale' and number(attributes, 'action-reply-revision') <= number(attributes, 'action-request-revision'):
+                raise RuntimeError('Fluent focus receipt is not a same-owner revision refusal')
+            if number(attributes, 'action-inflight'):
+                return None
+        # A pending reply can retire menu proxies. Read the stable root first;
+        # reacquire the exact caption/role/menu only once a reply is available.
+        action = action or current_action()
+        if action is None:
+            return None
+        item, _ = action
+        item.clear_cache()
+        if item.get_state_set().contains(Atspi.StateType.FOCUSED):
+            return action, reacquisitions
+        if status == 'ok':
+            return None
+        if status == 'stale':
+            reacquisitions += 1
+        if sequence == 2 ** 64 - 1:
+            raise RuntimeError('Fluent focus receipt sequence exhausted')
+        pending_sequence = sequence + 1
+        if not request_native_focus(Atspi, item):
+            raise RuntimeError('Native Focus action rejected')
+        return None
+
+    return wait(observe)
+
+
 def activate_fluent_menu_keyboard(Atspi, current_action, caption, role, wait,
                                   command, menus_retired):
-    """Focus once, reacquire its current menu proxy, then send one Return."""
+    """Require current owned focus, then send exactly one Return."""
     def current_menu_action():
         action = current_action()
         if action is None:
@@ -1619,12 +1702,13 @@ def activate_fluent_menu_keyboard(Atspi, current_action, caption, role, wait,
             raise RuntimeError('Current Fluent menu destination changed')
         return current, index
 
-    current, _ = focused_native_action(Atspi, current_menu_action, wait)
+    (current, _), reacquisitions = focused_fluent_menu_action(Atspi, current_menu_action, wait)
     current.clear_cache()
     if not current.get_state_set().contains(Atspi.StateType.FOCUSED):
         raise RuntimeError('Current Fluent menu destination lost focus')
     command(['xdotool', 'key', '--clearmodifiers', 'Return'])
     wait(menus_retired)
+    return reacquisitions
 
 
 class _NativeControlVisibility:
@@ -2246,7 +2330,8 @@ def verify(Atspi, app, objects, wait, command, report, speech_contains, restart=
     def observed_first(project):
         return native_observe_first(objects(app), project, current_nodes=lambda: objects(app))
     def observed_values(project):
-        return read_live_native_controls(objects(app), project, current_nodes=lambda: objects(app))
+        return read_native_snapshot(lambda: objects(app), lambda nodes:
+            read_live_native_controls(nodes, project, current_nodes=lambda: objects(app)))
     def observed_activation(nodes, name, **options):
         complete = True
         def current_proof():
@@ -2558,12 +2643,13 @@ def verify(Atspi, app, objects, wait, command, report, speech_contains, restart=
         if (fluent and name not in APPLICATION_MENU_CATEGORIES and activated_role in
                 (Atspi.Role.MENU_ITEM, Atspi.Role.CHECK_MENU_ITEM, Atspi.Role.RADIO_MENU_ITEM)):
             caption = item.get_name()
-            activate_fluent_menu_keyboard(Atspi, live_action, caption, activated_role,
+            focus_reacquisitions = activate_fluent_menu_keyboard(Atspi, live_action, caption, activated_role,
                 wait, command, lambda: observed_none(lambda node:
                     node.get_role() == Atspi.Role.MENU and
                     node.get_state_set().contains(Atspi.StateType.SHOWING)))
             report.setdefault('nativeFluentKeyboardMenuActivations', []).append(
-                {'control': name, 'caption': caption, 'input': 'one Return after current menu focus'})
+                {'control': name, 'caption': caption, 'input': 'one Return after current menu focus',
+                 'staleFocusReacquisitions': focus_reacquisitions})
             report['nativeLastAcknowledgedActivation'] = {'control': name,
                                                          'action': 'keyboard:Return'}
         else:

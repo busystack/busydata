@@ -1,3 +1,5 @@
+import sys
+sys.path.append("/mnt/Media/busystack/busydata/tool")
 import types
 import unittest
 
@@ -16,11 +18,30 @@ class NativeFluentMenuKeyboardTest(unittest.TestCase):
             actions=['tap'], name=initial.name)
         nodes, events = [frame, menu, initial], []
         state = {'current': initial, 'after_focus': None, 'missing_reads': 0}
+        root_attributes = {'busydata-status': 'ok', 'busydata-bridge-epoch': '1',
+            'busydata-owner-epoch': '2', 'busydata-revision': '100',
+            'busydata-action-sequence': '10', 'busydata-action-name': 'none',
+            'busydata-action-status': 'none', 'busydata-action-inflight': '0',
+            'busydata-action-bridge-epoch': '1', 'busydata-action-owner-epoch': '2',
+            'busydata-action-request-revision': '99', 'busydata-action-reply-revision': '99'}
+        state['root_attributes'] = root_attributes
+        for ordinal, item in enumerate((frame, menu, initial, replacement)):
+            item.path = '/org/a11y/atspi/accessible/test' + str(ordinal)
+            item.get_process_id = lambda: 1234
+            item.get_attributes = lambda: {}
+        frame.role = atspi.Role.PANEL
+        frame.get_attributes = lambda: dict(root_attributes)
 
         def focus(item, index):
             self.assertIs(initial, item)
             self.assertEqual(0, index)
             events.append('focus')
+            before = int(root_attributes['busydata-revision'])
+            root_attributes.update({'busydata-revision': str(before + 1),
+                'busydata-action-sequence': str(int(root_attributes['busydata-action-sequence']) + 1),
+                'busydata-action-name': 'focus', 'busydata-action-status': 'ok',
+                'busydata-action-request-revision': str(before),
+                'busydata-action-reply-revision': str(before + 1)})
             initial.states.add('focused')
             if current_focused:
                 replacement.states.add('focused')
@@ -60,7 +81,7 @@ class NativeFluentMenuKeyboardTest(unittest.TestCase):
             current_action=current_action, wait=wait, command=command)
 
     def activate(self, fixture):
-        activate_fluent_menu_keyboard(fixture.atspi, fixture.current_action,
+        return activate_fluent_menu_keyboard(fixture.atspi, fixture.current_action,
             'Edit complete value', 'menu-item', fixture.wait, fixture.command,
             lambda: fixture.menu not in fixture.nodes)
 
