@@ -24,14 +24,25 @@ class LargeTransferStorageTest {
     void databaseUsesTheCheckedStoreAndPreservesCleanupOwnership(Engine engine) throws Exception {
         try (var container = new GenericContainer<>(DockerImageName.parse("postgres:17.11"))) {
             LargeTransferStorage.prepare(root, engine).accept(container);
-            assertEquals(1, container.getBinds().size());
-            var mount = container.getBinds().getFirst();
+            assertEquals(engine == Engine.POSTGRESQL ? 1 : 2, container.getBinds().size());
+            String destination = engine == Engine.POSTGRESQL ? "/var/lib/postgresql/data" : "/var/lib/mysql";
+            var mount = container.getBinds().stream()
+                .filter(value -> value.getVolume().getPath().equals(destination)).findFirst().orElseThrow();
             Path data = root.resolve("database-data").toAbsolutePath();
             assertEquals(data.toString(), mount.getPath());
-            assertEquals(engine == Engine.POSTGRESQL ? "/var/lib/postgresql/data" : "/var/lib/mysql",
-                mount.getVolume().getPath());
             assertEquals("rw", mount.getAccessMode().toString());
             assertEquals(Files.getFileStore(root), Files.getFileStore(data));
+            Path temporary = root.resolve("database-temporary").toAbsolutePath();
+            if (engine == Engine.POSTGRESQL) {
+                assertFalse(Files.exists(temporary));
+            } else {
+                var temporaryMount = container.getBinds().stream()
+                    .filter(value -> value.getVolume().getPath().equals("/tmp")).findFirst().orElseThrow();
+                assertEquals(temporary.toString(), temporaryMount.getPath());
+                assertEquals("/tmp", temporaryMount.getVolume().getPath());
+                assertEquals("rw", temporaryMount.getAccessMode().toString());
+                assertEquals(Files.getFileStore(root), Files.getFileStore(temporary));
+            }
 
             var configuredUser = new AtomicReference<String>();
             var command = (CreateContainerCmd) Proxy.newProxyInstance(
@@ -53,6 +64,15 @@ class LargeTransferStorageTest {
     void existingDatabaseDirectoryIsNeverReused() throws Exception {
         Path data = Files.createDirectory(root.resolve("database-data"));
         Path marker = Files.writeString(data.resolve("existing-state"), "preserve");
+        assertThrows(FileAlreadyExistsException.class,
+            () -> LargeTransferStorage.prepare(root, Engine.MYSQL));
+        assertEquals("preserve", Files.readString(marker));
+    }
+
+    @Test
+    void existingTemporaryDatabaseDirectoryIsNeverReused() throws Exception {
+        Path temporary = Files.createDirectory(root.resolve("database-temporary"));
+        Path marker = Files.writeString(temporary.resolve("existing-state"), "preserve");
         assertThrows(FileAlreadyExistsException.class,
             () -> LargeTransferStorage.prepare(root, Engine.MYSQL));
         assertEquals("preserve", Files.readString(marker));
