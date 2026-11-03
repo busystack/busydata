@@ -1711,6 +1711,29 @@ def activate_fluent_menu_keyboard(Atspi, current_action, caption, role, wait,
     return reacquisitions
 
 
+def open_native_choice_keyboard(Atspi, current_action, caption, owner, wait, command):
+    """Open one captured chooser after its current focus reply; never replay Tap."""
+    owner_identity = (owner.get_process_id(), owner.path)
+
+    def current_choice():
+        action = current_action()
+        if action is None:
+            return None
+        item, index, _ = action
+        if (item.get_name() != caption or item.get_role() != Atspi.Role.PUSH_BUTTON or
+                not any((parent.get_process_id(), parent.path) == owner_identity
+                        for parent in accessible_ancestors(item))):
+            raise RuntimeError('Current native chooser destination changed')
+        return item, index
+
+    (current, _), reacquisitions = focused_fluent_menu_action(Atspi, current_choice, wait)
+    current.clear_cache()
+    if not current.get_state_set().contains(Atspi.StateType.FOCUSED):
+        raise RuntimeError('Current native chooser lost focus')
+    command(['xdotool', 'key', '--clearmodifiers', 'Return'])
+    return reacquisitions
+
+
 class _NativeControlVisibility:
     """One reveal dispatch, followed only by current visibility observations."""
     def __init__(self, Atspi):
@@ -2650,6 +2673,20 @@ def verify(Atspi, app, objects, wait, command, report, speech_contains, restart=
             report.setdefault('nativeFluentKeyboardMenuActivations', []).append(
                 {'control': name, 'caption': caption, 'input': 'one Return after current menu focus',
                  'staleFocusReacquisitions': focus_reacquisitions})
+            report['nativeLastAcknowledgedActivation'] = {'control': name,
+                                                         'action': 'keyboard:Return'}
+        elif (not fluent and name == 'Ascending' and activated_role == Atspi.Role.PUSH_BUTTON):
+            # This is the local sort-direction popup opener. Its asynchronous
+            # Tap can be refused while the preceding column selection rebuilds.
+            # A current owned focus reply followed by one Return opens it
+            # without treating a queued/stale Tap as an acknowledgement.
+            choice_owner = next(parent for parent in accessible_ancestors(item)
+                if parent.get_role() == Atspi.Role.PANEL and parent.get_name())
+            reacquisitions = open_native_choice_keyboard(Atspi, live_action,
+                item.get_name(), choice_owner, wait, command)
+            report.setdefault('nativeChoiceKeyboardOpenings', []).append({
+                'control': name, 'input': 'one Return after current chooser focus',
+                'staleFocusReacquisitions': reacquisitions})
             report['nativeLastAcknowledgedActivation'] = {'control': name,
                                                          'action': 'keyboard:Return'}
         else:
