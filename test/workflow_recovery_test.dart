@@ -1,5 +1,9 @@
-import 'dart:io';
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
+
+import 'package:busydata/src/features/workspace/documents.dart'
+    show atomicWrite;
 import 'package:busydata/src/backend/generated/busydata.pb.dart';
 import 'package:busydata/src/features/workspace/workbench_model.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -113,6 +117,8 @@ void main() {
       } finally {
         model.dispose();
         restored.dispose();
+        await model.recoverNow();
+        await restored.recoverNow();
         await root.delete(recursive: true);
       }
     },
@@ -172,6 +178,60 @@ void main() {
       } finally {
         model.dispose();
         restored.dispose();
+        await root.delete(recursive: true);
+      }
+    },
+  );
+  test(
+    'disposed recovery queue drains an already open fixture write',
+    () async {
+      final root = await Directory.systemTemp.createTemp('recovery-drain-');
+      final entered = Completer<void>();
+      final release = Completer<void>();
+      var writes = 0;
+      final model = WorkbenchModel(
+        root,
+        recoveryWrite: (file, bytes) async {
+          writes++;
+          if (writes != 1) {
+            await atomicWrite(file, bytes);
+            return;
+          }
+          final output = await file.open(mode: FileMode.write);
+          entered.complete();
+          try {
+            await release.future;
+            await output.writeFrom(bytes);
+          } finally {
+            await output.close();
+          }
+        },
+      )..newDocument(text: 'SELECT 42;');
+      final saving = model.recoverNow();
+      try {
+        await entered.future;
+        model.dispose();
+        var drained = false;
+        final draining = model.recoverNow().then((_) => drained = true);
+        await Future<void>.delayed(Duration.zero);
+        expect(drained, isFalse, reason: 'The owned file is still open');
+        release.complete();
+        await saving;
+        await draining;
+        expect(drained, isTrue);
+        final completedWrites = writes;
+        await model.recoverNow();
+        expect(
+          writes,
+          completedWrites,
+          reason: 'Disposed models start no new recovery',
+        );
+        expect(await File('${root.path}/drafts.json').exists(), isTrue);
+      } finally {
+        if (!release.isCompleted) release.complete();
+        if (!model.isDisposed) model.dispose();
+        await saving;
+        await model.recoverNow();
         await root.delete(recursive: true);
       }
     },
