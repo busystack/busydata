@@ -71,7 +71,18 @@ def validate_source_snapshot(manifest, root=ROOT):
     return verify_archive(paths['archive'], canonical)
 
 
+def resolve_command(argv):
+    """Windows CreateProcess does not search PATHEXT for SDK batch launchers."""
+    command = list(argv)
+    if os.name == 'nt' and command:
+        executable = shutil.which(command[0])
+        if executable is not None:
+            command[0] = executable
+    return command
+
+
 def command_output(argv, root=ROOT):
+    argv = resolve_command(argv)
     try:
         reply = subprocess.run(argv, cwd=root, capture_output=True, text=True, timeout=30)
         return {'command': argv, 'exitCode': reply.returncode, 'stdout': reply.stdout,
@@ -166,8 +177,12 @@ def run(stage, argv, reports=(), artifacts=(), root=ROOT):
         if old.exists():
             shutil.move(old, destination / ('preexisting-' + old.name))
     started = time.time()
+    requested = list(argv)
+    argv = resolve_command(argv)
     record = {'command': argv, 'startedUtc': utc(), 'exitCode': None,
               'status': 'running', 'buildSourceSha256': manifest['buildSourceSha256']}
+    if argv != requested:
+        record['requestedCommand'] = requested
     manifest['stages'][stage] = record
     atomic_json(path, manifest)
     log_path = destination / 'command.log'
@@ -219,7 +234,7 @@ def run(stage, argv, reports=(), artifacts=(), root=ROOT):
             missing_reports.append(relative)
     if reports and (missing_reports or not record['reports'] or any(r[k] for r in record['reports'] for k in ('failures', 'errors', 'skipped'))):
         record.update(status='failed', reason='Required tests are missing, failed, or skipped')
-    if '--machine' in argv and any(Path(arg).name in ('flutter', 'flutter.bat') for arg in argv):
+    if '--machine' in argv and any(Path(arg).name.lower() in ('flutter', 'flutter.bat') for arg in argv):
         completions, done = [], False
         for line in (destination / 'command.log').read_text(errors='replace').splitlines():
             try: event = json.loads(line)

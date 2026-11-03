@@ -8,7 +8,7 @@ from native_workbench_acceptance import read_native_snapshot, read_live_native_c
 
 class NativePaletteSnapshotTest(unittest.TestCase):
     def reader(self, snapshots):
-        source = ast.parse(Path(__file__).with_name('native_workbench_acceptance.py').read_text())
+        source = ast.parse(Path(__file__).with_name('native_workbench_acceptance.py').read_text(encoding='utf-8'))
         verify = next(node for node in source.body if isinstance(node, ast.FunctionDef) and node.name == 'verify')
         reader = next(node for node in verify.body if isinstance(node, ast.FunctionDef) and node.name == 'observed_values')
         def objects(app):

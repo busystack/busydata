@@ -7,7 +7,7 @@ import subprocess
 import uuid
 from backend_build_identity import verify_bundle, verify_jar
 from public_bundle_permissions import publish_public_bundle, validate_public_bundle
-from verification_evidence import ROOT, source_hash
+from verification_evidence import ROOT, source_hash, resolve_command
 from verify_official_dependencies import revalidate_receipt, owned_build_environment
 
 
@@ -70,7 +70,7 @@ def build(platform, no_pub=False):
     build_id, source = str(uuid.uuid4()), source_hash()
     started = datetime.datetime.now(datetime.timezone.utc).isoformat()
     entrypoint = f'lib/main_{platform}.dart'
-    command = ['flutter', 'build', platform, '--release', '-t', entrypoint]
+    command = resolve_command(['flutter', 'build', platform, '--release', '-t', entrypoint])
     if no_pub:
         # Explicit local mode following a separately successful locked pub get.
         # CI still executes its required flutter-dependencies stage.
@@ -117,7 +117,7 @@ def build(platform, no_pub=False):
                 digest = hashlib.file_digest(stream, 'sha256').hexdigest()
             files.append({'path': path.relative_to(bundle).as_posix(), 'sha256': digest,
                           'bytes': path.stat().st_size, 'mode': path.stat().st_mode & 0o777})
-    sdk = subprocess.run(['flutter', '--version', '--machine'], check=True, capture_output=True, text=True)
+    sdk = subprocess.run(resolve_command(['flutter', '--version', '--machine']), check=True, capture_output=True, text=True)
     report = {'buildId': build_id, 'buildSourceSha256': source, 'entrypoint': entrypoint,
               'startedUtc': started, 'finishedUtc': datetime.datetime.now(datetime.timezone.utc).isoformat(),
               'command': command, 'exitCode': status, 'backendSourceIdentity': backend_identity,
