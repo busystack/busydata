@@ -211,8 +211,10 @@ SDK/Visual Studio requirements. Native single-instance tests are part of its
 build. Database CI requires Docker and pulls every matrix image; missing stages
 fail rather than becoming a passing skipped matrix. Testcontainers is test-only.
 Exact Linux button/workbench PNG baselines run on Linux, where their reviewed
-font rasterization applies. Windows records those platform skips explicitly;
-they do not certify or replace native Fluent presentation acceptance.
+font rasterization applies. Windows records its complete selected file list and
+the four Linux-only renderer files in `build/windows-flutter-test-scope.json`.
+The Windows suite still rejects skipped tests; the full Linux suite executes the
+renderer cases. This scope does not certify native Fluent presentation acceptance.
 The Windows procedure builds/tests BusyData's file-call DLL before Flutter tests.
 Its tiny Win32 wrappers capture each return value and error in the same native
 call, before Dart runtime work can change thread-local `GetLastError`. Standalone
