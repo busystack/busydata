@@ -1011,10 +1011,17 @@ class _WindowsContextMenuState extends State<_WindowsContextMenu> {
                 checked: action.checked,
               ),
               trailing: action.shortcut == null ? null : Text(action.shortcut!),
+              closeAfterClick: false,
               onPressed: action.disabledReason == null
-                  ? () {
+                  ? () async {
+                      final route = ModalRoute.of(context)!;
+                      if (!route.isCurrent) return;
                       Flyout.of(context).close();
-                      action.invoke();
+                      // Retire the menu and restore the underlying semantics
+                      // before a command replaces a document or opens a dialog.
+                      await route.completed;
+                      await WidgetsBinding.instance.endOfFrame;
+                      if (mounted) action.invoke();
                     }
                   : null,
             ),
