@@ -170,6 +170,11 @@ public final class Jobs implements AutoCloseable {
                 }}
             catch(VirtualMachineError e){job.error="BACKEND_RESOURCE_FAILURE";if(s!=null)s.quarantine(e);outcome=readOnly?JobState.INTERRUPTED:JobState.UNKNOWN_OUTCOME;}
             finally {
+                // A queued cancellation can interrupt just after session-lock
+                // acquisition. Do not carry that interrupt into JDBC cleanup:
+                // virtual-thread socket I/O would close the healthy connection.
+                boolean cleanupInterrupted=Thread.interrupted();
+                try {
                 queueDeadline.cancel(false);
                 job.statement=null;
                 if(locked){try{job.finishExternalMutation(false);}catch(RuntimeException unavailable){job.message("Native source metadata remains unavailable; refresh explicitly without replay");}
@@ -199,6 +204,7 @@ public final class Jobs implements AutoCloseable {
                 if(job.metadataWitness!=null){job.metadataWitness.close();job.metadataWitness=null;}job.sourceSql="";job.statementMetadata=null;job.statementProofFailure=null;job.statementContext=null;job.proofFence=null;
                 synchronized(Jobs.this){admittedSqlBytes-=sqlBytes;}
                 job.finished.complete(job.info());
+                } finally {if(cleanupInterrupted)Thread.currentThread().interrupt();}
             }
         });return job;
     }

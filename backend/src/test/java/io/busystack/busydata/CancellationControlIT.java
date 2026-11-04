@@ -23,6 +23,27 @@ class CancellationControlIT {
         }
     }
 
+    @ParameterizedTest @ValueSource(strings={"POSTGRESQL","MYSQL","MARIADB"})
+    void retainedCancellationInterruptDoesNotBreakPhysicalSessionCleanup(String engine)throws Exception {
+        try(var f=new EngineFixture(root,engine)) {
+            var session=f.open();var original=session.connection;
+            var job=f.jobs.submitSql(session,UUID.randomUUID().toString(),"SELECT 1",current->{
+                // A queued cancel can interrupt after lock acquisition but
+                // before the worker observes its cancellation flag. Recreate
+                // that state without submitting SQL or racing a wall clock.
+                current.cancel.set(true);Thread.currentThread().interrupt();
+                current.checkCancel();
+            });
+            assertEquals(JobState.CANCELLED,job.finished.get(10,TimeUnit.SECONDS).getState());
+            assertTrue(job.cancel.get(),"Cleanup must not revoke logical cancellation");
+            assertEquals(TransactionState.IDLE,session.state,"Cleanup must not turn a retained worker interrupt into a connection failure");
+            assertSame(original,session.connection);assertFalse(session.physicalEnded());
+            assertFalse(session.connection.isClosed());
+            var healthy=f.execute(session,"SELECT 29");
+            assertEquals("29",f.results.get(healthy.info().getResults(0).getResultId()).read(0).getValues(0).getSignedInteger());
+        }
+    }
+
     @org.junit.jupiter.api.Test
     void postgresqlCancellationBetweenPublicationAndExecuteStillStopsTheServer()throws Exception {
         var entered=new CountDownLatch(1);var firstControlFinished=new CountDownLatch(1);
