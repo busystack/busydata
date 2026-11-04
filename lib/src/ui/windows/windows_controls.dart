@@ -268,8 +268,11 @@ class WindowsControls extends DesktopControls {
   @override
   DesktopMenuPresenter createMenuPresenter() => _WindowsMenuPresenter();
   @override
-  Widget tooltip(String message, Widget child) =>
-      Tooltip(message: message, excludeFromSemantics: true, child: child);
+  Widget tooltip(String message, Widget child) => _WindowsTooltipAnchor(
+    message: message,
+    excludeFromSemantics: true,
+    child: child,
+  );
   @override
   Widget contextMenu(Widget child, List<DesktopMenuAction> actions) =>
       _WindowsContextMenu(actions: actions, child: child);
@@ -305,7 +308,7 @@ class WindowsControls extends DesktopControls {
     onInvoked: action,
     secondaryBuilder: (context, show, controller) => FlyoutTarget(
       controller: controller,
-      child: Tooltip(
+      child: _WindowsTooltipAnchor(
         message: optionsLabel,
         excludeFromSemantics: true,
         child: MergeSemantics(
@@ -409,7 +412,7 @@ class WindowsControls extends DesktopControls {
     String label,
     VoidCallback? action, {
     bool compact = false,
-  }) => Tooltip(
+  }) => _WindowsTooltipAnchor(
     message: label,
     excludeFromSemantics: true,
     child: MergeSemantics(
@@ -639,7 +642,7 @@ class WindowsControls extends DesktopControls {
     bool enabled = true,
   }) {
     final control = LayoutBuilder(
-      builder: (context, bounds) => Tooltip(
+      builder: (context, bounds) => _WindowsTooltipAnchor(
         message: choices[value]!,
         excludeFromSemantics: true,
         child: ComboBox<T>(
@@ -1129,4 +1132,25 @@ class _WindowsMenuPresenter extends DesktopMenuPresenter {
     _menuContext = null;
     _controller.dispose();
   }
+}
+
+// Keep tooltip traversal anchors distinct from surrounding control semantics.
+class _WindowsTooltipAnchor extends StatelessWidget {
+  const _WindowsTooltipAnchor({
+    required this.message,
+    required this.child,
+    this.excludeFromSemantics = false,
+  });
+  final String message;
+  final Widget child;
+  final bool excludeFromSemantics;
+  @override
+  Widget build(BuildContext context) => Semantics(
+    container: true,
+    child: Tooltip(
+      message: message,
+      excludeFromSemantics: excludeFromSemantics,
+      child: child,
+    ),
+  );
 }

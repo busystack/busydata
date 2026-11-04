@@ -136,6 +136,13 @@ class _WindowsBusyDataAppState extends ConsumerState<WindowsBusyDataApp>
         title: 'BusyData',
         debugShowCheckedModeBanner: false,
         routerConfig: router,
+        // Keep the navigator's semantic parent stable while portal overlays change.
+        builder: (context, child) => Semantics(
+          container: true,
+          explicitChildNodes: true,
+          identifier: 'busydata.windows.router',
+          child: child!,
+        ),
         theme: theme(Brightness.light),
         darkTheme: theme(Brightness.dark),
         localizationsDelegates: const [AppLocalizations.delegate],
