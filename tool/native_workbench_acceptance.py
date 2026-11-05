@@ -1788,12 +1788,39 @@ def focus_live_native_control(Atspi, current_item, wait):
     return wait(focused)
 
 
+def _native_field_snapshot(item):
+    """Read only the current owned bridge receipt, including queued actions."""
+    roots = []
+    for parent in accessible_ancestors(item):
+        parent.clear_cache()
+        attributes = parent.get_attributes()
+        if isinstance(attributes, dict) and 'busydata-status' in attributes:
+            roots.append((parent, attributes))
+    if len(roots) != 1:
+        raise RuntimeError('Native field snapshot owner unavailable')
+    root, attributes = roots[0]
+    def number(name, minimum=0):
+        value = attributes.get('busydata-' + name)
+        if (not isinstance(value, str) or not re.fullmatch(r'[0-9]{1,20}', value)
+                or not minimum <= int(value) < 2 ** 64):
+            raise RuntimeError('Invalid native field snapshot receipt')
+        return int(value)
+    process, path = root.get_process_id(), root.path
+    if (type(process) is not int or not 0 < process < 2 ** 31 or
+            not isinstance(path, str) or not path.startswith('/') or len(path) > 4096):
+        raise RuntimeError('Invalid native field snapshot owner')
+    owner = (process, path, number('bridge-epoch', 1), number('owner-epoch', 1))
+    if attributes.get('busydata-status') != 'ok' or number('action-inflight'):
+        return None
+    return owner, number('revision', 1), number('action-sequence')
+
+
 def focus_visible_native_field(Atspi, current_item, wait, minimum_height=0):
-    """Wait for the native field's focus/reveal, before one text action."""
+    """Await idle, stable owned semantics and geometry before one text action."""
     focus_live_native_control(Atspi, current_item, wait)
-    previous = None
+    previous = owner = None
     def revealed():
-        nonlocal previous
+        nonlocal previous, owner
         item = current_item()
         if item is None:
             previous = None
@@ -1802,16 +1829,27 @@ def focus_visible_native_field(Atspi, current_item, wait, minimum_height=0):
         if not item.get_state_set().contains(Atspi.StateType.FOCUSED):
             previous = None
             return None
+        before = _native_field_snapshot(item)
+        if before is None:
+            previous = None
+            return None
+        if owner is not None and before[0] != owner:
+            raise RuntimeError('Native field snapshot owner changed')
+        owner = before[0]
         bounds = Atspi.Component.get_extents(item, Atspi.CoordType.WINDOW)
         geometry = (bounds.x, bounds.y, bounds.width, bounds.height)
         count = Atspi.Text.get_character_count(item)
         caret = Atspi.Text.get_caret_offset(item)
-        if (bounds.width <= 0 or bounds.height <= 0 or bounds.height < minimum_height or
-                not 0 <= caret <= count):
+        after = _native_field_snapshot(item)
+        if after is not None and after[0] != owner:
+            raise RuntimeError('Native field snapshot owner changed')
+        if (after != before or bounds.width <= 0 or bounds.height <= 0 or
+                bounds.height < minimum_height or not 0 <= caret <= count):
             previous = None
             return None
-        stable = previous == geometry
-        previous = geometry
+        observation = (after, geometry, count, caret)
+        stable = previous == observation
+        previous = observation
         return item if stable else None
     return wait(revealed)
 

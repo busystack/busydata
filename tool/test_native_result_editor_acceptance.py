@@ -126,6 +126,8 @@ class NativeResultEditorEvidenceTest(unittest.TestCase):
                 get_text=lambda node,start,end:node.text[start:] if end==-1 else node.text[start:end]),
             EditableText=types.SimpleNamespace(set_text_contents=edit))
         with patch('native_workbench_acceptance.accessible_ancestors', return_value=[modal]), patch(
+                'native_workbench_acceptance._native_field_snapshot',
+                return_value=((17, '/owned/root', 1, 2), 1, 0)), patch(
                 'native_workbench_acceptance.request_native_focus', side_effect=request):
             self.assertIs(acknowledged, set_native_inline_text(atspi, acquire, '2', wait, expected_original=''))
         self.assertEqual(state['focusRequests'], [stale, current])

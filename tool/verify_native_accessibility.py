@@ -1190,11 +1190,11 @@ def main():
             if catalog_fixture is not None:
                 catalog_fixture['configuredInnoDBBufferPoolBytes'] = 32 * 1024 * 1024
         report['stage'] = 'fixture-start'
-        # MySQL's default server is designed for approximately 512 MiB. Its
-        # ordinary authentication/connection tour must not run in a 256 MiB
-        # container that can die after readiness. This is disposable server
-        # provisioning, separate from the unchanged measured application cap.
-        fixture_memory_mib = 512 if args.ordinary_mysql else 256
+        # A 256 MiB MySQL fixture can be killed during server initialization.
+        # Use the ordinary tour's 512 MiB allowance for every native MySQL tour.
+        # This is disposable server provisioning, separate from the unchanged
+        # measured application cap.
+        fixture_memory_mib = 512 if engine == 'MYSQL' else 256
         fixture_creation_attempted = True
         fixture = subprocess.run(['docker', 'run', '--rm', '-d',
             '--cidfile', str(fixture_receipt),

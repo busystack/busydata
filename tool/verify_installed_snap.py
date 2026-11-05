@@ -245,8 +245,12 @@ def paste_gtk_text(value, consumed=None):
         raise RuntimeError('Native picker path byte or control-character limit')
     if consumed is None:
         raise RuntimeError('Native paste requires confirmation from the intended control')
+    # The headless selection owner must not register a transient application
+    # in the product reader session. Accessibility stays enabled for the caller.
+    helper_environment = dict(os.environ, NO_AT_BRIDGE='1')
     helper = subprocess.Popen([sys.executable, str(ROOT / 'tool/native_picker_clipboard.py')],
-        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+        env=helper_environment)
     try:
         helper.stdin.write(encoded + b'\n')
         helper.stdin.flush()

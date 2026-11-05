@@ -1951,7 +1951,9 @@ class NativeAcceptanceTest(unittest.TestCase):
                 result = predicate()
                 if result: return result
             raise TimeoutError('Native field did not reveal')
-        self.assertIs(item, focus_visible_native_field(atspi, lambda: item, wait, 35))
+        with patch('native_workbench_acceptance._native_field_snapshot',
+                   return_value=((17, '/owned/root', 1, 2), 1, 0)):
+            self.assertIs(item, focus_visible_native_field(atspi, lambda: item, wait, 35))
         self.assertEqual(4, len(observed))
 
     def test_native_field_reveal_does_not_certify_invalid_editing_state(self):
@@ -1968,7 +1970,8 @@ class NativeAcceptanceTest(unittest.TestCase):
                 result = predicate()
                 if result: return result
             raise TimeoutError('Native field did not reveal')
-        with self.assertRaises(TimeoutError):
+        with patch('native_workbench_acceptance._native_field_snapshot',
+                   return_value=((17, '/owned/root', 1, 2), 1, 0)), self.assertRaises(TimeoutError):
             focus_visible_native_field(atspi, lambda: item, wait, 35)
 
     def test_hidden_page_marker_is_revealed_without_focus_or_activation(self):

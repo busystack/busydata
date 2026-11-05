@@ -1,5 +1,6 @@
 import json
 import io
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -187,10 +188,17 @@ class InstalledAcceptanceTest(unittest.TestCase):
             self.assertFalse(helper.stdin.closed)
             observations.append(True)
             return len(observations) == 2
-        with patch('verify_installed_snap.subprocess.Popen', return_value=helper), \
+        with patch.dict(os.environ, {'NO_AT_BRIDGE':'0',
+                    'AT_SPI_BUS_ADDRESS':'unix:path=/owned/accessibility'}), \
+             patch('verify_installed_snap.subprocess.Popen', return_value=helper) as launched, \
              patch('verify_installed_snap.ready_line', side_effect=[{'ready':True}, {'served':True}]), \
              patch('verify_installed_snap.run'), patch('verify_installed_snap.time.sleep'):
             paste_gtk_text('/owned/漢😀.sql', target_consumed)
+            self.assertEqual('0', os.environ['NO_AT_BRIDGE'])
+            self.assertEqual('unix:path=/owned/accessibility', os.environ['AT_SPI_BUS_ADDRESS'])
+            child_environment = launched.call_args.kwargs['env']
+            self.assertEqual('1', child_environment['NO_AT_BRIDGE'])
+            self.assertEqual('unix:path=/owned/accessibility', child_environment['AT_SPI_BUS_ADDRESS'])
         self.assertEqual(2, len(observations))
         self.assertTrue(helper.stdin.closed)
         self.assertTrue(helper.stdout.closed)
