@@ -27,6 +27,7 @@ from native_workbench_acceptance import verify as verify_workbench, verify_multi
 from native_workbench_acceptance import native_catalog_text
 from native_workbench_acceptance import find_live_control
 from native_workbench_acceptance import focused_native_action
+from native_workbench_acceptance import set_native_inline_text
 from native_workbench_acceptance import native_control_absent, find_live_sql_editor, native_startup_editor_state, read_live_native_controls, native_caption_presence, restored_native_sql_editor
 from desktop_build_evidence import verify_existing_bundle
 
@@ -518,8 +519,11 @@ def owned(directory):
                     interface='EditableText', current_nodes=lambda: objects(app))
             query = wait(palette_input)
             focus_native_control(Atspi, query, wait)
-            if not Atspi.EditableText.set_text_contents(query, 'probe'):
-                raise RuntimeError('Native search input rejected')
+            # Focus can publish a newer native snapshot. Reacquire the settled
+            # field and acknowledge its value, not just a queued text action.
+            set_native_inline_text(Atspi, palette_input, 'probe', wait,
+                                   expected_original='')
+            report['nativeStartupSearchProbeValueAcknowledged'] = True
             def native_clear_action():
                 field = palette_input()
                 if field is None: return None
