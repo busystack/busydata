@@ -87,17 +87,22 @@ DropDownButton _menuDropDown({
   DropDownButtonBuilder? buttonBuilder,
   Widget? title,
 }) {
-  final configured = DropDownButton(
+  return DropDownButton(
     items: items,
     buttonBuilder: buttonBuilder,
     title: title,
-  );
-  return DropDownButton(
-    items: configured.items,
-    buttonBuilder: configured.buttonBuilder,
-    title: configured.title,
-    transitionBuilder: (context, animation, placement, flyout) => configured
-        .transitionBuilder(context, animation, placement, _menuScope(flyout)),
+    // A clipped slide can expose an empty menu and replace the semantic parent
+    // of retained scroll nodes on completion. Fade the official popup under one
+    // stable boundary, keeping its menu items exposed throughout the transition.
+    transitionBuilder: (context, animation, placement, flyout) => _menuScope(
+      FadeTransition(
+        opacity: animation.drive(
+          CurveTween(curve: FluentTheme.of(context).animationCurve),
+        ),
+        alwaysIncludeSemantics: true,
+        child: flyout,
+      ),
+    ),
   );
 }
 
