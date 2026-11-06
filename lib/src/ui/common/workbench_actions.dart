@@ -913,6 +913,22 @@ mixin WorkbenchActions on State<WorkbenchView> {
     final target = model.document,
         binding = model.analysisBinding(model.document);
     final targetName = sqlDocumentName(context, target);
+    // Closing a command menu can leave its document scope primary. Restore the
+    // exact SQL view before the modal captures its origin, keeping a later
+    // intentional focus change under the usual modal restoration rules.
+    if (identical(FocusManager.instance.primaryFocus, model.documentFocus)) {
+      for (final node in model.documentFocus.descendants) {
+        final view = node.context
+            ?.findAncestorWidgetOfExactType<WorkbenchSqlEditor>();
+        if (node.canRequestFocus &&
+            identical(view?.controller, target.editor) &&
+            identical(view?.focusNode, node)) {
+          node.requestFocus();
+          FocusManager.instance.applyFocusChangesIfNeeded();
+          break;
+        }
+      }
+    }
     final result = await model.analyze(
       target,
       operation: rpc.AnalysisOperation.FORMAT,
