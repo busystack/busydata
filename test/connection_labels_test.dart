@@ -90,7 +90,14 @@ void main() {
         );
         for (final p in model.profiles) {
           expect(
-            tester.widget<WorkbenchRecord>(find.byKey(ValueKey(p.id))).label,
+            tester
+                .widget<WorkbenchRecord>(
+                  find.descendant(
+                    of: find.byKey(ValueKey(p.id)),
+                    matching: find.byType(WorkbenchRecord),
+                  ),
+                )
+                .label,
             names[p.id],
           );
           expect(
