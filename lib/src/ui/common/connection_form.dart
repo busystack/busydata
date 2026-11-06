@@ -1996,21 +1996,26 @@ class _ConnectionFormState extends State<ConnectionForm> {
                           key: const ValueKey('connection-source-list'),
                           children: [
                             for (final source in drafts.values)
-                              WorkbenchRecord(
+                              KeyedSubtree(
                                 key: ValueKey(source.id),
-                                controls: ui,
-                                label:
-                                    '${sourceNames[source.id]}${source.dirty ? ' *' : ''}',
-                                selected: identical(selected, source),
-                                onPressed: idle
-                                    ? () => selectSource(source)
-                                    : null,
+                                // The record owns and excludes its child
+                                // semantics. Keep the tooltip's portal anchor
+                                // outside that exclusion with its popup.
                                 child: ui.tooltip(
                                   sourceNames[source.id]!,
-                                  Text(
-                                    '${sourceNames[source.id]}${source.dirty ? ' *' : ''}',
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
+                                  WorkbenchRecord(
+                                    controls: ui,
+                                    label:
+                                        '${sourceNames[source.id]}${source.dirty ? ' *' : ''}',
+                                    selected: identical(selected, source),
+                                    onPressed: idle
+                                        ? () => selectSource(source)
+                                        : null,
+                                    child: Text(
+                                      '${sourceNames[source.id]}${source.dirty ? ' *' : ''}',
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
                                 ),
                               ),
