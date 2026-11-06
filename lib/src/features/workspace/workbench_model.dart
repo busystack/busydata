@@ -4394,12 +4394,22 @@ class WorkbenchModel extends ChangeNotifier {
     final target = accepted.binding.document;
     target.selectOffsets(completion.startUtf16, completion.endUtf16);
     target.editor.replaceSelection(completion.insertText);
-    return target.editor.text ==
+    if (target.editor.text !=
         accepted.binding.text.replaceRange(
           completion.startUtf16,
           completion.endUtf16,
           completion.insertText,
-        );
+        )) {
+      return false;
+    }
+    // The accepted edit must not immediately suggest the same identifier again.
+    // Keep diagnostics and parameter information current for the inserted text.
+    _analysisTimer?.cancel();
+    unawaited(analyze(target, operation: AnalysisOperation.DIAGNOSTICS));
+    unawaited(
+      analyze(target, operation: AnalysisOperation.PARAMETER_INFORMATION),
+    );
+    return true;
   }
 
   Row? row(String result, int index) {
