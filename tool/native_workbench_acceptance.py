@@ -1688,6 +1688,15 @@ def focused_fluent_menu_action(Atspi, current_action, wait):
     return wait(observe)
 
 
+def clear_native_search(Atspi, current_clear, wait):
+    """Clear once using a current target after its owned focus acknowledgement."""
+    (clear, action_index), reacquisitions = focused_fluent_menu_action(Atspi, current_clear, wait)
+    label = clear.get_name()
+    if not label or not Atspi.Action.do_action(clear, action_index):
+        raise RuntimeError('Native search clear action rejected')
+    return label, reacquisitions
+
+
 def activate_fluent_menu_keyboard(Atspi, current_action, caption, role, wait,
                                   command, menus_retired):
     """Require current owned focus, then send exactly one Return."""
@@ -1944,6 +1953,19 @@ def visible_native_bounds(Atspi, current_item, wait):
         previous = geometry
         return box if stable else None
     return wait(revealed)
+
+
+def select_native_document_tab(Atspi, current_tab, wait, command):
+    """Select a freshly resolved visible tab once, then require current selection."""
+    bounds = visible_native_bounds(Atspi, current_tab, wait)
+    pointer_at_native_bounds(command, bounds)
+    def selected():
+        current = current_tab()
+        if current is None:
+            return None
+        current.clear_cache()
+        return current if current.get_state_set().contains(Atspi.StateType.SELECTED) else None
+    return wait(selected)
 
 
 def set_native_inline_text(Atspi, current_item, value, wait, *, expected_original=None):
@@ -4114,9 +4136,11 @@ def verify(Atspi, app, objects, wait, command, report, speech_contains, restart=
             raise RuntimeError('Catalog-engine reviewed edit changed another row or catalog')
         report['nativeIndependentCommittedRowCheckVerified'] = True
         report['nativeInlineOwnedEditReviewApplyAndCommitVerified'] = True
-        tab, action, _ = wait(lambda: find_query_tab_activation(Atspi, objects(app), 'native_atspi_fixture',
-            native_query_identity, native_name, current_nodes=lambda: objects(app)))
-        if not Atspi.Action.do_action(tab, action): raise RuntimeError('Table document activation rejected')
+        def current_table_tab():
+            action = find_query_tab_activation(Atspi, objects(app), 'native_atspi_fixture',
+                native_query_identity, native_name, current_nodes=lambda: objects(app))
+            return action[0] if action is not None else None
+        select_native_document_tab(Atspi, current_table_tab, wait, command)
         refresh_grid()
         wait(lambda: find('Row 1, n: reviewed native edit'), 30)
         report['nativeExplicitPostChangeRefreshVerified'] = True

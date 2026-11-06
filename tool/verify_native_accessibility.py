@@ -26,7 +26,7 @@ from verify_installed_snap import paste_gtk_text, stop
 from native_workbench_acceptance import verify as verify_workbench, verify_multicaret, fresh_accessible_objects, accessible_ancestors, native_display_scale, native_catalog_labels, photograph_product, find_live_activation, focus_native_control, native_sql_editor_label, native_sql_editor_announcement, native_ime_composition_active
 from native_workbench_acceptance import native_catalog_text
 from native_workbench_acceptance import find_live_control
-from native_workbench_acceptance import focused_native_action
+from native_workbench_acceptance import clear_native_search
 from native_workbench_acceptance import set_native_inline_text
 from native_workbench_acceptance import native_control_absent, find_live_sql_editor, native_startup_editor_state, read_live_native_controls, native_caption_presence, restored_native_sql_editor
 from desktop_build_evidence import verify_existing_bundle
@@ -554,10 +554,9 @@ def owned(directory):
                 candidates = [value for value in observations if value is not None]
                 if len(candidates) > 1: raise RuntimeError('Ambiguous native search clear action')
                 return candidates[0] if candidates else None
-            clear, action_index = focused_native_action(Atspi, native_clear_action, wait)
-            report['nativeSearchClearLabel'] = clear.get_name()
-            if not report['nativeSearchClearLabel'] or not Atspi.Action.do_action(clear, action_index):
-                raise RuntimeError('Native search clear action rejected')
+            (report['nativeSearchClearLabel'],
+             report['nativeStartupSearchClearFocusReacquisitions']) = clear_native_search(
+                Atspi, native_clear_action, wait)
             def cleared_palette():
                 field = palette_input()
                 if field is None: return False
