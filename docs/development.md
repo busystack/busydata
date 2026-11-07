@@ -135,6 +135,13 @@ the complete aggregate scope. Caller-supplied gallery settings are restored afte
 the stage. Gallery captures do not substitute for native accessibility or genuine
 Windows acceptance.
 
+On a shared host, `--flutter-test-concurrency 1` runs the complete Flutter
+unit/widget suite one file at a time through Flutter's supported concurrency
+option. The aggregate records that exact command. The default scheduling,
+individual test deadlines, gallery coverage and native performance workloads
+remain unchanged. Use this option to bound verification's own parallel work.
+
+
 The VM tool builds separate product/acceptance packages, installs and checks the
 ordinary product's native window, activation, cleanup, payload and kernel labels,
 then executes the confined test-entrypoint workflows. A staged/unpacked payload

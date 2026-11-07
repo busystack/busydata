@@ -43,6 +43,16 @@ def gallery_capture(directory):
             os.environ[variable] = previous
 
 
+def positive_concurrency(value):
+    try:
+        count = int(value)
+    except ValueError as error:
+        raise argparse.ArgumentTypeError('Flutter test concurrency must be a positive integer') from error
+    if count < 1:
+        raise argparse.ArgumentTypeError('Flutter test concurrency must be a positive integer')
+    return count
+
+
 def main():
     with official_pub_cache():
         return run_pipeline()
@@ -51,6 +61,8 @@ def main():
 def run_pipeline():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--scope', choices=('database', 'linux', 'desktop-full'), default='desktop-full')
+    parser.add_argument('--flutter-test-concurrency', type=positive_concurrency, metavar='WORKERS',
+                        help='Set concurrent Flutter unit/widget test suites through the official Flutter option; native performance stages are unchanged')
     parser.add_argument('--offline-flutter', action='store_true',
                         help='Verify the existing locked Flutter cache without network resolution')
     parser.add_argument('--unavailable-installed-snap', metavar='REASON',
@@ -99,15 +111,18 @@ def run_pipeline():
         stage('format', ['dart', 'format', '--output=none', '--set-exit-if-changed', 'lib', 'test', 'tool', 'integration_test'], needs=('official-dependencies',))
         stage('analyze', ['flutter', 'analyze'], needs=('official-dependencies',))
         stage('boundaries', ['dart', 'run', 'tool/check_platform_boundaries.dart'], needs=('official-dependencies',))
+        flutter_tests = ['flutter', 'test', '--machine', '--no-pub']
+        if args.flutter_test_concurrency is not None:
+            flutter_tests.append('--concurrency=' + str(args.flutter_test_concurrency))
         if sys.platform == 'linux':
             gallery = ROOT / 'build/verification/runs' / str(run_identifier) / 'screen-gallery'
             captions = tuple((gallery / theme / 'captions.json').relative_to(ROOT).as_posix()
                              for theme in ('dark', 'light'))
             with gallery_capture(gallery):
-                stage('flutter-tests', ['flutter', 'test', '--machine', '--no-pub'],
+                stage('flutter-tests', flutter_tests,
                       artifacts=captions, needs=('flutter-dependencies', 'official-dependencies'))
         else:
-            stage('flutter-tests', ['flutter', 'test', '--machine', '--no-pub'], needs=('flutter-dependencies', 'official-dependencies'))
+            stage('flutter-tests', flutter_tests, needs=('flutter-dependencies', 'official-dependencies'))
         if sys.platform == 'linux':
             component = ROOT / 'build/verification/runs' / str(run_identifier) / 'native-accessibility-component/component'
             stage('native-accessibility-component',
