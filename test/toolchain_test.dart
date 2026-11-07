@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import '../tool/verify_flutter_sdk.dart' as verifier;
@@ -23,9 +22,8 @@ void main() {
     }
   });
   test('F12 rejects a downgrade and accepts a newer installed SDK', () {
-    final minimum =
-        jsonDecode(File('config/toolchain.json').readAsStringSync())
-            as Map<String, dynamic>;
+    // A stable policy fixture; the selected CI/packaging pin is checked below.
+    const minimum = <String, String>{'flutter': '3.47.5', 'dart': '3.13.4'};
     expect(
       verifier.versionAtLeast('3.47.4', minimum['flutter'] as String),
       isFalse,

@@ -62,9 +62,10 @@ unchanged loader and libraries; they do not patch executable RPATHs or replace
 workstation tools. Build fixture tools into a new output directory and verify
 it before replacing an existing fixture tree.
 
-Approved toolchain: Flutter **3.47.5**, bundled Dart **3.13.4**,
+Approved toolchain: Flutter **3.49.0-0.2.pre**, bundled Dart **3.14.0-211.1.beta**,
 Temurin **25.0.4.1+1**, Maven Wrapper **3.9.11** / wrapper **3.3.4**.
-The local host has Flutter 3.47.5/Dart 3.13.4. config/toolchain.json is the shared
+Select the approved official beta SDK through the build process PATH.
+config/toolchain.json is the shared
 toolchain declaration. Verification requires the exact Flutter/Dart pins and
 unmodified SDK; configuration checks prevent pins from diverging. Evidence reports
 versions from executed tools, with configured CI versions labelled separately.
