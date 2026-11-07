@@ -4288,25 +4288,33 @@ class BusyDataSidebarTreeControl extends StatelessWidget {
     return Tooltip(
       message: label,
       excludeFromSemantics: true,
-      child: SizedBox.square(
-        dimension: BusyDataSizes.sidebarTreeControl,
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: onToggle,
-          child: AnimatedRotation(
-            turns: expanded
-                ? rtl
-                      ? -.25
-                      : .25
-                : 0,
-            duration: MediaQuery.disableAnimationsOf(context)
-                ? Duration.zero
-                : const Duration(milliseconds: 120),
-            child: Transform.flip(
-              flipX: rtl,
-              child: const Icon(
-                YaruIcons.pan_end,
-                size: BusyDataSizes.sidebarTreeArrow,
+      child: Semantics(
+        container: true,
+        excludeSemantics: true,
+        button: true,
+        enabled: true,
+        label: label,
+        onTap: onToggle,
+        child: SizedBox.square(
+          dimension: BusyDataSizes.sidebarTreeControl,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onToggle,
+            child: AnimatedRotation(
+              turns: expanded
+                  ? rtl
+                        ? -.25
+                        : .25
+                  : 0,
+              duration: MediaQuery.disableAnimationsOf(context)
+                  ? Duration.zero
+                  : const Duration(milliseconds: 120),
+              child: Transform.flip(
+                flipX: rtl,
+                child: const Icon(
+                  YaruIcons.pan_end,
+                  size: BusyDataSizes.sidebarTreeArrow,
+                ),
               ),
             ),
           ),

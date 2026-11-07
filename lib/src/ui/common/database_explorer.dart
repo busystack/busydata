@@ -3247,22 +3247,10 @@ class _DatabaseExplorerState extends State<DatabaseExplorer> {
                                                     Row(
                                                       children: [
                                                         if (expandable)
-                                                          Semantics(
-                                                            container: true,
-                                                            excludeSemantics:
-                                                                true,
-                                                            button: true,
-                                                            enabled: true,
-                                                            label:
-                                                                '${node.expanded ? l.collapse : l.expand} ${node.label}',
-                                                            onTap: () =>
-                                                                expand(node),
-                                                            child: ui.treeExpander(
-                                                              node.expanded,
-                                                              '${node.expanded ? l.collapse : l.expand} ${node.label}',
-                                                              () =>
-                                                                  expand(node),
-                                                            ),
+                                                          ui.treeExpander(
+                                                            node.expanded,
+                                                            '${node.expanded ? l.collapse : l.expand} ${node.label}',
+                                                            () => expand(node),
                                                           )
                                                         else
                                                           SizedBox(
