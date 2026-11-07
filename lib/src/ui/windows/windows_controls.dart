@@ -1,4 +1,5 @@
 import 'dart:ui' show SemanticsRole;
+import 'package:re_editor/re_editor.dart' show CodeEditorTapRegion;
 import 'package:flutter/services.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import '../common/desktop_controls.dart';
@@ -62,12 +63,16 @@ class _WorkbenchFluentDialogRoute<T> extends FluentDialogRoute<T> {
   }
 }
 
-Widget _menuScope(Widget child, {bool bar = false}) => Semantics(
-  container: true,
-  explicitChildNodes: true,
-  role: bar ? SemanticsRole.menuBar : SemanticsRole.menu,
-  enabled: true,
-  child: child,
+// Menu gestures retain the editor input owner until the command deliberately
+// moves focus; both the menu bar and its actual popup share this public group.
+Widget _menuScope(Widget child, {bool bar = false}) => CodeEditorTapRegion(
+  child: Semantics(
+    container: true,
+    explicitChildNodes: true,
+    role: bar ? SemanticsRole.menuBar : SemanticsRole.menu,
+    enabled: true,
+    child: child,
+  ),
 );
 
 // Keep this non-container annotation on the text: official menu cloning
@@ -619,22 +624,17 @@ class WindowsControls extends DesktopControls {
     ValueChanged<T> changed, {
     bool enabled = true,
   }) => Builder(
-    builder: (context) => MergeSemantics(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: ExcludeSemantics(
-              child: Text(
-                title,
-                style: FluentTheme.of(context).typography.body,
-              ),
-            ),
+    builder: (context) => Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 4),
+          child: ExcludeSemantics(
+            child: Text(title, style: FluentTheme.of(context).typography.body),
           ),
-          choice(value, values, changed, label: title, enabled: enabled),
-        ],
-      ),
+        ),
+        choice(value, values, changed, label: title, enabled: enabled),
+      ],
     ),
   );
 
@@ -645,40 +645,42 @@ class WindowsControls extends DesktopControls {
     ValueChanged<T> changed, {
     String? label,
     bool enabled = true,
-  }) {
-    final control = LayoutBuilder(
-      builder: (context, bounds) => _WindowsTooltipAnchor(
+  }) => LayoutBuilder(
+    builder: (context, bounds) {
+      final control = ComboBox<T>(
+        value: value,
+        isExpanded: bounds.hasBoundedWidth,
+        items: choices.entries
+            .map(
+              (e) => ComboBoxItem(
+                value: e.key,
+                child: Text(
+                  e.value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            )
+            .toList(),
+        onChanged: enabled
+            ? (v) {
+                if (v != null) changed(v);
+              }
+            : null,
+      );
+      // The tooltip overlay refers to its semantic anchor. Keep that boundary
+      // outside the label/value merge so its traversal parent remains exposed.
+      return _WindowsTooltipAnchor(
         message: choices[value]!,
         excludeFromSemantics: true,
-        child: ComboBox<T>(
-          value: value,
-          isExpanded: bounds.hasBoundedWidth,
-          items: choices.entries
-              .map(
-                (e) => ComboBoxItem(
-                  value: e.key,
-                  child: Text(
-                    e.value,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              )
-              .toList(),
-          onChanged: enabled
-              ? (v) {
-                  if (v != null) changed(v);
-                }
-              : null,
-        ),
-      ),
-    );
-    return label == null
-        ? control
-        : MergeSemantics(
-            child: Semantics(label: label, child: control),
-          );
-  }
+        child: label == null
+            ? control
+            : MergeSemantics(
+                child: Semantics(label: label, child: control),
+              ),
+      );
+    },
+  );
 
   @override
   double choiceWidth(BuildContext context, String label) {
