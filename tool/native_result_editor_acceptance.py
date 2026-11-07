@@ -95,6 +95,16 @@ def native_modal_source_restored(nodes, modal, source_owner, selected_owner, cur
     return True if absent is True and selected == source_owner else None
 
 
+def native_result_source_ready(source_owner, selected_owner):
+    """Wait for a complete owner read, but reject an actual different source."""
+    selected = selected_owner()
+    if selected is None:
+        return None
+    if selected != source_owner:
+        raise RuntimeError('P0 result-editor source owner changed')
+    return True
+
+
 def native_authored_modal_role(Atspi, report):
     """Bind the role to the verified composition, not an observed alternative."""
     if 'actualComposition' not in report:
@@ -347,6 +357,7 @@ def verify(Atspi, app, objects, wait, command, report, *, palette, activate,
         visible_native_bounds, pointer_at_native_bounds,
         bounded_native_text, accessible_ancestors, native_catalog_text,
         native_observe_any, native_observe_first, read_live_native_controls,
+        read_native_snapshot,
         set_native_inline_text)
     import gi
     import hashlib
@@ -392,17 +403,19 @@ def verify(Atspi, app, objects, wait, command, report, *, palette, activate,
     before_durable = durable_snapshot()
 
     def owned():
-        if selected_owner() != source_owner:
-            raise RuntimeError('P0 result-editor source owner changed')
+        wait(lambda: native_result_source_ready(source_owner, selected_owner))
 
     def observed_any(predicate):
-        return native_observe_any(objects(app), predicate, lambda: objects(app))
+        return read_native_snapshot(lambda: objects(app), lambda nodes:
+            native_observe_any(nodes, predicate, lambda: objects(app)))
 
     def observed_first(project):
-        return native_observe_first(objects(app), project, lambda: objects(app))
+        return read_native_snapshot(lambda: objects(app), lambda nodes:
+            native_observe_first(nodes, project, lambda: objects(app)))
 
     def observed_values(project):
-        return read_live_native_controls(objects(app), project, lambda: objects(app))
+        return read_native_snapshot(lambda: objects(app), lambda nodes:
+            read_live_native_controls(nodes, project, lambda: objects(app)))
 
     def seen_raw(label):
         return observed_first(lambda node: (

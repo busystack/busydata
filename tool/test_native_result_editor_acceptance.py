@@ -6,10 +6,38 @@ from unittest.mock import patch
 from native_workbench_acceptance import set_native_inline_text, captured_native_modal_field, NativeSnapshotIncomplete
 from native_result_editor_acceptance import exact_native_status_line, has_exact_native_line, native_complete_value_matches, NativeValueModalOwner, validate, native_modal_source_restored, close_native_source_modal, find_native_authored_modal, native_authored_modal_role
 from native_result_editor_acceptance import native_fixture_row_positions, native_value_editor_identity
+from native_result_editor_acceptance import native_result_source_ready
 
 
 VALUE_INSTANCE = 'busydata.value.editor.v1.63cd655a-5b9f-412b-bd22-98e29b0910b9'
 OTHER_INSTANCE = 'busydata.value.editor.v1.f98d688f-1766-48ee-80f5-eae78584e0de'
+
+
+class NativeResultSourceOwnerTest(unittest.TestCase):
+    def test_incomplete_observation_waits_for_the_same_captured_owner(self):
+        readings = iter([None, 'source'])
+        selected = lambda: next(readings)
+        self.assertIsNone(native_result_source_ready('source', selected))
+        self.assertTrue(native_result_source_ready('source', selected))
+
+    def test_a_different_owner_fails_without_waiting_for_it_to_change_back(self):
+        readings = iter([None, 'foreign', 'source'])
+        selected = lambda: next(readings)
+        self.assertIsNone(native_result_source_ready('source', selected))
+        with self.assertRaisesRegex(RuntimeError, 'source owner changed'):
+            native_result_source_ready('source', selected)
+        self.assertEqual(next(readings), 'source')
+
+    def test_persistent_missing_owner_never_acknowledges_readiness(self):
+        for _ in range(3):
+            self.assertIsNone(native_result_source_ready('source', lambda: None))
+
+    def test_unrelated_reader_errors_propagate(self):
+        failure = ValueError('unavailable transport')
+        def selected(): raise failure
+        with self.assertRaises(ValueError) as raised:
+            native_result_source_ready('source', selected)
+        self.assertIs(raised.exception, failure)
 
 
 def value_node(identifier='', role='entry', title='', pid=17):
