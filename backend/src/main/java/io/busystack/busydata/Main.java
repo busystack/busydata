@@ -50,8 +50,13 @@ public final class Main {
         var ready=new JsonObject();ready.addProperty("port",server.getPort());ready.addProperty("instanceId",service.instance);ready.addProperty("protocolVersion",WorkbenchService.PROTOCOL);ready.addProperty("version","0.1.0");ready.addProperty("certificatePem",tls.pem());
         System.out.println(ready);System.out.flush();
         process.onExit().thenRun(close);
-        Thread.ofVirtual().start(()->{try{while(boundedLine(input)!=null){} }catch(Exception ignored){}finally{close.run();}});
+        startInputMonitor(input,close);
         ended.await();executor.shutdownNow();startupStage="SHUTDOWN";if(cleanupFailure.get()!=null)throw new IllegalStateException("Backend resource cleanup failed",cleanupFailure.get());
+    }
+    static Thread startInputMonitor(Reader input,Runnable close){
+        // The blocking parent pipe must not occupy a virtual-thread carrier
+        // needed by status and cancellation RPCs while a result is spooling.
+        return Thread.ofPlatform().daemon(true).name("busydata-parent-input").start(()->{try{while(boundedLine(input)!=null){} }catch(Exception ignored){}finally{close.run();}});
     }
     private static void closeResource(AutoCloseable resource,AtomicReference<Throwable> failure){try{resource.close();}catch(Exception cleanup){retainCleanup(failure,cleanup);}}
     private static void retainCleanup(AtomicReference<Throwable> failure,Throwable cleanup){var primary=failure.get();if(primary==null)failure.compareAndSet(null,cleanup);else primary.addSuppressed(cleanup);}
