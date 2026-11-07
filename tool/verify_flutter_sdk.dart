@@ -39,7 +39,9 @@ Future<void> main(List<String> arguments) async {
       throw const FormatException('Flutter version output is not an object.');
     }
     final flutterVersion = flutterInfo['frameworkVersion']?.toString();
-    final flutterDartVersion = flutterInfo['dartSdkVersion']?.toString();
+    final flutterDartVersion = canonicalDartVersion(
+      flutterInfo['dartSdkVersion']?.toString() ?? '',
+    );
     if (!versionAtLeast(flutterVersion ?? '', expectedFlutter)) {
       throw StateError(
         'BusyData requires Flutter $expectedFlutter or newer; found $flutterVersion. Do not downgrade the installed SDK.',
@@ -77,6 +79,23 @@ Future<void> main(List<String> arguments) async {
     stderr.writeln(error);
     exitCode = 1;
   }
+}
+
+/// Official Flutter beta metadata may carry both the base and build version.
+/// Keep one exact semantic version and reject inconsistent or unknown forms.
+String? canonicalDartVersion(String value) {
+  final version = RegExp(
+    r'^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$',
+  );
+  if (version.hasMatch(value)) return value;
+  final metadata = RegExp(
+    r'^(\d+\.\d+\.\d+) \(build (\d+\.\d+\.\d+-[0-9A-Za-z.-]+(?:\+[0-9A-Za-z.-]+)?)\)$',
+  ).firstMatch(value);
+  if (metadata == null ||
+      metadata.group(2)!.split('-').first != metadata.group(1)) {
+    return null;
+  }
+  return metadata.group(2);
 }
 
 /// A newer stable or prerelease SDK is acceptable; a prerelease of the minimum

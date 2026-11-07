@@ -4,6 +4,24 @@ import 'package:flutter_test/flutter_test.dart';
 import '../tool/verify_flutter_sdk.dart' as verifier;
 
 void main() {
+  test('F12 canonicalizes official Dart beta build metadata', () {
+    const versions = <String, String?>{
+      '3.13.4': '3.13.4',
+      '3.14.0-315.3.beta': '3.14.0-315.3.beta',
+      '3.14.0 (build 3.14.0-315.3.beta)': '3.14.0-315.3.beta',
+      '3.14.0 (build 3.13.0-315.3.beta)': null,
+      '3.14.0 (build unknown)': null,
+      '3.14.0 (build 3.14.0-315.3.beta) trailing': null,
+      'unknown': null,
+    };
+    for (final entry in versions.entries) {
+      expect(
+        verifier.canonicalDartVersion(entry.key),
+        entry.value,
+        reason: entry.key,
+      );
+    }
+  });
   test('F12 rejects a downgrade and accepts a newer installed SDK', () {
     final minimum =
         jsonDecode(File('config/toolchain.json').readAsStringSync())
