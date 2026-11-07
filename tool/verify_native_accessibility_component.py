@@ -47,10 +47,14 @@ def run(command, output, *, timeout, environment):
         resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
 
     process = subprocess.Popen(command, cwd=ROOT, env=environment,
-                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                start_new_session=True,
                                preexec_fn=disable_core_dumps)
     log = BoundedProcessLog(process, output, 2 * 1024 * 1024)
+    # D-Bus diagnostics can end without a newline. Keep them out of the TAP
+    # stream while preserving both streams and the original combined budget.
+    error_log = BoundedProcessLog(process, output.with_suffix('.stderr.log'),
+                                  2 * 1024 * 1024, stream=process.stderr)
     timed_out = False
     try:
         try:
@@ -65,8 +69,13 @@ def run(command, output, *, timeout, environment):
                 status = process.wait(3)
     finally:
         record = log.finish()
+        error_record = error_log.finish()
+    combined_bytes = record['receivedBytes'] + error_record['receivedBytes']
     return {'command': command, 'exitCode': status, 'timedOut': timed_out,
-            'log': record, 'passed': status == 0 and not timed_out and record['complete']}
+            'log': record, 'stderrLog': error_record,
+            'combinedReceivedBytes': combined_bytes,
+            'passed': status == 0 and not timed_out and record['complete']
+                      and error_record['complete'] and combined_bytes <= 2 * 1024 * 1024}
 
 
 def verify(flutter_root, directory):

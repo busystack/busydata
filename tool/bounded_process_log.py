@@ -3,8 +3,9 @@ import threading
 
 
 class BoundedProcessLog:
-    def __init__(self, process, destination, limit=8 * 1024 * 1024):
+    def __init__(self, process, destination, limit=8 * 1024 * 1024, *, stream=None):
         self.process = process
+        self.stream = process.stdout if stream is None else stream
         self.destination = destination
         self.limit = limit
         self.received = 0
@@ -18,7 +19,7 @@ class BoundedProcessLog:
             with self.destination.open('wb') as output:
                 # BufferedReader.read(size) can hide all progress until a full
                 # block or EOF. Drain bytes that are actually available.
-                read = getattr(self.process.stdout, 'read1', self.process.stdout.read)
+                read = getattr(self.stream, 'read1', self.stream.read)
                 while chunk := read(65536):
                     self.received += len(chunk)
                     count = min(len(chunk), self.limit - self.retained)
@@ -29,7 +30,7 @@ class BoundedProcessLog:
         except Exception as failure:
             self.failure = type(failure).__name__
         finally:
-            self.process.stdout.close()
+            self.stream.close()
 
     def finish(self):
         self.thread.join(timeout=10)
