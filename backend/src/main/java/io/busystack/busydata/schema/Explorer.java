@@ -581,7 +581,10 @@ public final class Explorer {
         }
         if(r.getIntrospectionLevel()==1){
             var retained=query.properties.stream().filter(property->(Set.of("nativeId","nativeGeneration","_version").contains(property)||r.getKind()==ObjectKind.CONSTRAINT&&property.equals("type")||r.getKind()==ObjectKind.ROUTINE&&property.equals("specificName"))).toList();
-            query=new Query("SELECT c,s,p,n,i,k"+(retained.isEmpty()?"":","+String.join(",",retained.stream().map(s.adapter::quote).toList()))+" FROM ("+query.sql+") metadata_names",query.parameters,retained);
+            // PostgreSQL folds the routine query's unquoted specificName alias.
+            // Keep that spelling unquoted through this Names-only projection.
+            var columns=retained.stream().map(property->pg&&property.equals("specificName")?property:s.adapter.quote(property)).toList();
+            query=new Query("SELECT c,s,p,n,i,k"+(columns.isEmpty()?"":","+String.join(",",columns))+" FROM ("+query.sql+") metadata_names",query.parameters,retained);
         }
         if(pg)return query;
         String sql=query.sql;
