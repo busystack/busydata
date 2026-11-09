@@ -1,3 +1,4 @@
+import 'support/windows_secret_input.dart';
 import 'dart:io';
 import 'package:busydata/src/backend/generated/busydata.pb.dart' as rpc;
 import 'package:busydata/src/features/workspace/workbench_model.dart';
@@ -14,6 +15,7 @@ import 'support/connection_widgets.dart';
 import 'support/serialized_semantics_test_binding.dart';
 
 void main() {
+  setUpWindowsSecretInputFixture();
   SerializedSemanticsTestBinding();
   for (final longName in [false, true]) {
     testWidgets(
@@ -124,7 +126,8 @@ void main() {
             await tester.ensureVisible(field);
             await tester.tap(field);
             await frames('focus-$key');
-            await tester.enterText(
+            await enterDesktopText(
+              tester,
               field,
               key == 'port' ? '32899' : 'synthetic-fixture-secret',
             );

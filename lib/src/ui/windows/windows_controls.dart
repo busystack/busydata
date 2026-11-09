@@ -1,3 +1,4 @@
+import 'dart:io' show Platform;
 import 'dart:ui' show SemanticsRole;
 import 'package:re_editor/re_editor.dart' show CodeEditorTapRegion;
 import 'package:flutter/services.dart';
@@ -7,6 +8,7 @@ import '../../l10n/workbench_strings.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart' as glyphs;
 import '../common/modal_command_boundary.dart';
 import '../common/modal_focus_restoration.dart';
+import 'windows_secret_field.dart';
 
 Widget _dialogTransition(
   BuildContext context,
@@ -534,25 +536,36 @@ class WindowsControls extends DesktopControls {
     Widget? trailing,
     String? errorText,
   }) {
-    final input = MergeSemantics(
-      child: Semantics(
-        label: label,
-        hint: errorText,
-        child: TextBox(
-          controller: controller,
-          focusNode: focusNode,
-          obscureText: secret,
-          readOnly: readOnly,
-          textDirection: technical ? TextDirection.ltr : null,
-          autocorrect: !secret && !technical,
-          enableSuggestions: !secret && !technical,
-          // TextBox merges its suffix semantics into the editor. Reserve the
-          // native icon allocation and overlay the independent browse action.
-          suffix: trailing == null ? null : const SizedBox(width: 38),
-          enabled: enabled,
-        ),
-      ),
-    );
+    final input = secret && Platform.isWindows
+        ? WindowsSecretField(
+            controller: controller,
+            label: label,
+            focusNode: focusNode,
+            enabled: enabled,
+            readOnly: readOnly,
+            technical: technical,
+            hasTrailing: trailing != null,
+            hint: errorText,
+          )
+        : MergeSemantics(
+            child: Semantics(
+              label: label,
+              hint: errorText,
+              child: TextBox(
+                controller: controller,
+                focusNode: focusNode,
+                obscureText: secret,
+                readOnly: readOnly,
+                textDirection: technical ? TextDirection.ltr : null,
+                autocorrect: !secret && !technical,
+                enableSuggestions: !secret && !technical,
+                // TextBox merges its suffix semantics into the editor. Reserve the
+                // native icon allocation and overlay the independent browse action.
+                suffix: trailing == null ? null : const SizedBox(width: 38),
+                enabled: enabled,
+              ),
+            ),
+          );
     final field = trailing == null
         ? input
         : Stack(
@@ -1155,7 +1168,13 @@ class _WindowsTooltipAnchor extends StatelessWidget {
   Widget build(BuildContext context) => Semantics(
     container: true,
     child: Tooltip(
-      message: message,
+      message: Platform.isWindows ? null : message,
+      richMessage: Platform.isWindows
+          ? WindowsSecretTooltipSpan(
+              message,
+              style: TooltipTheme.of(context).textStyle,
+            )
+          : null,
       excludeFromSemantics: excludeFromSemantics,
       child: child,
     ),

@@ -62,6 +62,9 @@ bool FlutterWindow::OnCreate() {
   }
   RegisterPlugins(flutter_controller_->engine());
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
+  secret_input_ = std::make_unique<WindowsSecretInput>(
+      GetHandle(), flutter_controller_->view()->GetNativeWindow(),
+      flutter_controller_->engine()->messenger());
 
   desktop_channel_ =
       std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
@@ -178,6 +181,7 @@ void FlutterWindow::QueueActivation(std::string activation) {
 }
 
 void FlutterWindow::OnDestroy() {
+  secret_input_.reset();
   if (flutter_controller_) {
     flutter_controller_ = nullptr;
   }
@@ -189,6 +193,11 @@ LRESULT
 FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
                               WPARAM const wparam,
                               LPARAM const lparam) noexcept {
+  LRESULT secret_result = 0;
+  if (secret_input_ &&
+      secret_input_->HandleMessage(message, wparam, lparam, &secret_result)) {
+    return secret_result;
+  }
   // BusyData owns the one review for a native close. Flutter's lifecycle
   // delegate otherwise approves and re-dispatches WM_CLOSE before reaching this
   // runner, which would ask for the same dirty-document review a second time.

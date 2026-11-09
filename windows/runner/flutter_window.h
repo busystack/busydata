@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "win32_window.h"
+#include "secret_input.h"
 
 // A window that does nothing but host a Flutter view.
 class FlutterWindow : public Win32Window {
@@ -39,6 +40,7 @@ class FlutterWindow : public Win32Window {
 
   // The Flutter instance hosted by this window.
   std::unique_ptr<flutter::FlutterViewController> flutter_controller_;
+  std::unique_ptr<WindowsSecretInput> secret_input_;
   std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>>
       desktop_channel_;
   std::mutex activation_mutex_;

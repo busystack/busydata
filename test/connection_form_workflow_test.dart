@@ -1,3 +1,4 @@
+import 'support/windows_secret_input.dart';
 import 'support/connection_widgets.dart';
 import 'dart:async';
 import 'dart:io';
@@ -21,6 +22,7 @@ import 'support/fake_backend.dart';
 import 'support/native_window.dart';
 
 void main() {
+  setUpWindowsSecretInputFixture();
   for (final ui in <DesktopControls>[
     const LinuxControls(),
     const WindowsControls(),
@@ -566,7 +568,7 @@ void main() {
           );
           Future<void> enter(String key, String value) async {
             await tester.ensureVisible(input(key));
-            await tester.enterText(input(key), value);
+            await enterDesktopText(tester, input(key), value);
           }
 
           void actionsReachable() {
@@ -736,8 +738,8 @@ void main() {
           of: find.byKey(ValueKey('connection-$key')),
           matching: find.byType(EditableText),
         );
-        await tester.enterText(input('name'), 'Query fixture');
-        await tester.enterText(input('user'), 'fixture');
+        await enterDesktopText(tester, input('name'), 'Query fixture');
+        await enterDesktopText(tester, input('user'), 'fixture');
         backend.client.profileAction = (r) async =>
             ProfileList(profiles: [r.profile]);
         backend.client.opening = (_) async =>
@@ -753,7 +755,7 @@ void main() {
         );
         model.newDocument();
         final unrelated = model.activeOwner;
-        await tester.enterText(input('host'), 'corrected-host');
+        await enterDesktopText(tester, input('host'), 'corrected-host');
         backend.client.opening = (r) async => SessionInfo(
           metadataSourceIdentity: fixtureMetadataSourceIdentity,
           sessionId: 'query-owned',
@@ -1007,7 +1009,8 @@ class FormRouteFixture {
         );
         expect(paletteOrigin, isA<FocusScopeNode>());
       }
-      await tester.enterText(
+      await enterDesktopText(
+        tester,
         find.descendant(
           of: find.byType(SearchHeaderField),
           matching: find.byType(EditableText),
@@ -1067,7 +1070,7 @@ class FormRouteFixture {
       matching: find.byType(EditableText),
     );
     await tester.ensureVisible(input);
-    await tester.enterText(input, text);
+    await enterDesktopText(tester, input, text);
     await tester.pump();
   }
 

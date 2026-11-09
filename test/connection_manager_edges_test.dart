@@ -1,3 +1,4 @@
+import 'support/windows_secret_input.dart';
 import 'package:busydata/src/backend/generated/busydata.pb.dart';
 import 'package:busydata/src/ui/common/desktop_controls.dart';
 import 'package:busydata/src/ui/linux/linux_controls.dart';
@@ -17,6 +18,7 @@ Finder removeSource() => find
     .hitTestable();
 
 void main() {
+  setUpWindowsSecretInputFixture();
   for (final ui in <DesktopControls>[
     const LinuxControls(),
     const WindowsControls(),

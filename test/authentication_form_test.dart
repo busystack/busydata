@@ -1,3 +1,4 @@
+import 'support/windows_secret_input.dart';
 import 'package:busydata/src/backend/generated/busydata.pb.dart' as rpc;
 import 'package:busydata/src/ui/common/authentication_form.dart';
 import 'package:busydata/src/ui/common/desktop_controls.dart';
@@ -8,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  setUpWindowsSecretInputFixture();
   for (final controls in <DesktopControls>[
     const LinuxControls(),
     const WindowsControls(),
@@ -46,13 +48,13 @@ void main() {
         );
         expect(received, isNull);
         final fields = find.byWidgetPredicate(
-          (w) => w is EditableText && !w.readOnly,
+          (w) => w is EditableText && (!w.readOnly || w.obscureText),
         );
         expect(fields, findsNWidgets(4));
-        await tester.enterText(fields.at(0), 'Exact 漢 account');
-        await tester.enterText(fields.at(1), 'localhost');
-        await tester.enterText(fields.at(2), 'secret \\ quoted');
-        await tester.enterText(fields.at(3), 'secret \\ quoted');
+        await enterDesktopText(tester, fields.at(0), 'Exact 漢 account');
+        await enterDesktopText(tester, fields.at(1), 'localhost');
+        await enterDesktopText(tester, fields.at(2), 'secret \\ quoted');
+        await enterDesktopText(tester, fields.at(3), 'secret \\ quoted');
         expect(tester.widget<EditableText>(fields.at(2)).obscureText, isTrue);
         await tester.tap(find.text('Review account operation'));
         await tester.pumpAndSettle();

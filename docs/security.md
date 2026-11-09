@@ -349,6 +349,19 @@ Runtime modification of upstream accessible classes/interfaces and private
 engine hooks is prohibited; see
 [native accessibility ownership](native_accessibility_bridge.md).
 
+Windows secret fields use an application-owned `ES_PASSWORD` edit control and
+its standard Windows accessibility provider. Fluent supplies the frame and
+keyboard traversal owner; its masked, read-only visual underlay publishes no
+second text-field provider or input connection. Native name, description,
+enabled and read-only state belong to the actual edit control. Controller
+updates carry an isolate owner, field identity, generation and event serial;
+replacement and disposal reject stale callbacks. The channel retains only the
+latest pending state for each field. Native bounds follow Flutter clipping,
+modal visibility and painted tooltips. An unrepresentable native value leaves
+the logical controller intact and reports unavailable input; it cannot silently
+truncate the value or enable an unprotected editor. These controls use public
+Win32 and Flutter interfaces without modifying the engine or Fluent UI.
+
 Modal keyboard acceptance requires a fresh, enabled, visible control within the
 expected dialog. A native ancestor may report focus ownership alongside its
 descendant; only verified ancestry permits ignoring that ancestor. Independent

@@ -1,3 +1,4 @@
+import 'support/windows_secret_input.dart';
 import 'dart:io';
 import 'dart:ui' show Tristate;
 
@@ -16,6 +17,7 @@ import 'support/fake_backend.dart';
 import 'support/native_window.dart';
 
 void main() {
+  setUpWindowsSecretInputFixture();
   for (final controls in <DesktopControls>[
     const LinuxControls(),
     const WindowsControls(),
@@ -123,9 +125,17 @@ void main() {
         );
         expect(password, findsOneWidget);
         final data = tester.getSemantics(password).getSemanticsData();
-        expect(data.label, 'Password');
-        expect(data.flagsCollection.isObscured, isTrue);
-        expect(data.flagsCollection.isFocused, Tristate.isTrue);
+        if (Platform.isWindows && controls is WindowsControls) {
+          // The protected HWND owns accessibility outside Flutter's semantics
+          // tree; a second Flutter text-field provider must not be exposed.
+          expect(data.flagsCollection.isTextField, isFalse);
+          expect(nativeSecretFieldState('Password')['visible'], isTrue);
+          expect(nativeSecretFieldHasFocus('Password'), isTrue);
+        } else {
+          expect(data.label, 'Password');
+          expect(data.flagsCollection.isObscured, isTrue);
+          expect(data.flagsCollection.isFocused, Tristate.isTrue);
+        }
         final bounds = tester.getRect(
           controls is LinuxControls
               ? find.descendant(
