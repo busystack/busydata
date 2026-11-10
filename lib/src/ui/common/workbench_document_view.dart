@@ -2041,6 +2041,7 @@ class _ComparisonDocumentState extends State<ComparisonDocument> {
                   data.changed();
                 });
               },
+              enabled: !data.busy,
             ),
           Wrap(
             spacing: 8,
@@ -2071,6 +2072,7 @@ class _ComparisonDocumentState extends State<ComparisonDocument> {
             (id) {
               if (!data.busy) setState(() => data.profileId = id);
             },
+            enabled: !data.busy,
           ),
         if (engineMismatch) Text(l.migrationEngineMismatch),
         Text(l.sameSchemaRestriction),
