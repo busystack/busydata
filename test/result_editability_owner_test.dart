@@ -167,8 +167,9 @@ class _GridFixture {
     final messages = tooltips
         .map(
           (widget) => widget is Tooltip
-              ? widget.message
-              : (widget as fluent.Tooltip).message,
+              ? widget.message ?? widget.richMessage?.toPlainText()
+              : (widget as fluent.Tooltip).message ??
+                    widget.richMessage?.toPlainText(),
         )
         .whereType<String>();
     expect(messages, contains(expected));

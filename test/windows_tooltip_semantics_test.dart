@@ -193,7 +193,9 @@ void main() {
           watching = true;
           final more = find
               .byWidgetPredicate(
-                (w) => w is fluent.Tooltip && w.message == 'More',
+                (w) =>
+                    w is fluent.Tooltip &&
+                    (w.message ?? w.richMessage?.toPlainText()) == 'More',
               )
               .hitTestable();
           expect(more, findsWidgets);

@@ -111,7 +111,17 @@ void main() {
         await mouse.moveTo(tester.getCenter(expand));
         await frames('show-expander-tooltip');
         expect(
-          find.text('Expand ${profile.name}'),
+          // A native occlusion span exposes the child's complete plain text
+          // too. Count the paragraph that paints the text, not both layers.
+          find.byWidgetPredicate(
+            (widget) =>
+                widget is Text &&
+                (widget.data ??
+                        widget.textSpan?.toPlainText(
+                          includeSemanticsLabels: false,
+                        )) ==
+                    'Expand ${profile.name}',
+          ),
           findsOneWidget,
           reason:
               'Preserve the visible tooltip rather than removing the feature',
